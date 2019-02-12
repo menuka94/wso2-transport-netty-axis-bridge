@@ -1,15 +1,14 @@
 package org.wso2;
 
-import io.netty.handler.codec.http.HttpHeaders;
-import org.wso2.transport.http.netty.contract.HttpConnectorListener;
-import org.wso2.transport.http.netty.message.HttpCarbonMessage;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
-public class Bridge implements HttpConnectorListener {
-    public void onMessage(HttpCarbonMessage httpCarbonMessage) {
 
-    }
+public class Bridge {
 
-    public void onError(Throwable throwable) {
+    private static final Log log = LogFactory.getLog(Bridge.class);
+
+    public static void main(String[] args) {
 
     }
 }
