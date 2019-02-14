@@ -34,7 +34,7 @@
     <properties>
         <transport.http.bridge.package.export.version>${project.version}</transport.http.bridge.package.export.version>
         <axis2.transport.base.version>1.6.1-wso2v28</axis2.transport.base.version>
-        <wso2.transports.http.version>6.0.258</wso2.transports.http.version>
+        <wso2.transports.http.version>6.0.261-SNAPSHOT</wso2.transports.http.version>
         <wso2.transports.http.import.package.version.range>
             [6.0.0, 7.0.0)
         </wso2.transports.http.import.package.version.range>
@@ -43,7 +43,8 @@
         <private.package>
         </private.package>
         <export.package>
-            org.wso2.transports.http.bridge;version="${transport.http.bridge.package.export.version}"
+            org.wso2.transports.http.bridge;version="${transport.http.bridge.package.export.version}",
+            org.wso2.transports.http.bridge.*;version="${transport.http.bridge.package.export.version}"
         </export.package>
         <import.package>
             org.wso2.carbon.messaging.*;version="${carbon.messaging.package.import.version.range}",

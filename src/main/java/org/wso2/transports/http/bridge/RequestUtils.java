@@ -66,7 +66,9 @@ public class RequestUtils {
         });
         incomingCarbonMsg.getHeaders().forEach(entry -> headers.put(entry.getKey(), entry.getValue()));
         msgCtx.setProperty(MessageContext.TRANSPORT_HEADERS, headers);
-
+        // Set the original incoming carbon message as a property
+        msgCtx.setProperty(BridgeConstants.HTTP_CARBON_MESSAGE, incomingCarbonMsg);
+        msgCtx.setProperty(BridgeConstants.HTTP_CLIENT_REQUEST_CARBON_MESSAGE, incomingCarbonMsg);
         return msgCtx;
     }
 

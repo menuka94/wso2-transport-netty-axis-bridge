@@ -29,10 +29,16 @@ public class BridgeConstants {
     public static final String HTTP_WORKER_THREAD_GROUP = "HTTP Worker Thread Group";
     public static final String HTTP_WORKER_THREAD_ID = "HTTPWorker";
     public static final String HTTP_METHOD = "HTTP_METHOD";
+    public static final String HTTP_STATUS_CODE = "HTTP_STATUS_CODE";
+    public static final String HTTP_REASON_PHRASE = "HTTP_REASON_PHRASE";
     public static final String REST_URL_POSTFIX = "REST_URL_POSTFIX";
     public static final String SERVICE_PREFIX = "SERVICE_PREFIX";
     public static final String CONTENT_TYPE_HEADER = "Content-Type";
     public static final String REST_REQUEST_CONTENT_TYPE = "synapse.internal.rest.contentType";
     public static final String SOAP_ACTION_HEADER = "SOAPAction";
+    public static final String HTTP_CARBON_MESSAGE = "HTTP_CARBON_MESSAGE";
+    public static final String HTTP_CLIENT_REQUEST_CARBON_MESSAGE = "HTTP_CLIENT_REQUEST_CARBON_MESSAGE";
+    public static final String HTTP_STATUS_CODE_PROP = "HTTP_SC";
+    public static final String HTTP_STATUS_CODE_DESCRIPTION_PROP = "HTTP_SC_DESC";
 
 }
