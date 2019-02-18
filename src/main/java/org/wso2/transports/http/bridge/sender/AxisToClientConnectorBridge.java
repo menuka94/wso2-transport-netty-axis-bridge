@@ -1,3 +1,21 @@
+/*
+ *  Copyright (c) 2019, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ *
+ *  WSO2 Inc. licenses this file to you under the Apache License,
+ *  Version 2.0 (the "License"); you may not use this file except
+ *  in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing,
+ *  software distributed under the License is distributed on an
+ *  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ *  KIND, either express or implied.  See the License for the
+ *  specific language governing permissions and limitations
+ *  under the License.
+ *
+ */
 package org.wso2.transports.http.bridge.sender;
 
 import io.netty.handler.codec.http.HttpHeaderNames;
@@ -34,31 +52,15 @@ import java.util.HashMap;
 public class AxisToClientConnectorBridge extends AbstractHandler implements TransportSender {
 
     private HttpClientConnector clientConnector;
-    private HttpWsConnectorFactory httpWsConnectorFactory;
-    private SenderConfiguration senderConfiguration;
-    private ConnectionManager connectionManager;
-
     private static final Logger LOG = LoggerFactory.getLogger(AxisToClientConnectorBridge.class);
 
-
     @Override
-    public void cleanup(MessageContext messageContext) throws AxisFault {
-
-    }
-
-    @Override
-    public void init(ConfigurationContext configurationContext, TransportOutDescription transportOutDescription)
-            throws AxisFault {
-        httpWsConnectorFactory = new DefaultHttpWsConnectorFactory();
-        senderConfiguration = new SenderConfiguration();
-        connectionManager = new ConnectionManager(senderConfiguration.getPoolConfiguration());
+    public void init(ConfigurationContext configurationContext, TransportOutDescription transportOutDescription) {
+        HttpWsConnectorFactory httpWsConnectorFactory = new DefaultHttpWsConnectorFactory();
+        SenderConfiguration senderConfiguration = new SenderConfiguration();
+        ConnectionManager connectionManager = new ConnectionManager(senderConfiguration.getPoolConfiguration());
         clientConnector = httpWsConnectorFactory
                 .createHttpClientConnector(new HashMap<>(), senderConfiguration, connectionManager);
-    }
-
-    @Override
-    public void stop() {
-
     }
 
     @Override
@@ -68,35 +70,50 @@ public class AxisToClientConnectorBridge extends AbstractHandler implements Tran
                 (HttpCarbonMessage) msgCtx.getProperty(BridgeConstants.HTTP_CARBON_MESSAGE);
 
         if (httpCarbonMessage == null) {
-            LOG.info("Message not found, message generation not implemented yet");
+            LOG.info("Carbon Message not found, " +
+                    "sending " +
+                    "requests originated from non HTTP transport is not supported yet");
             return InvocationResponse.ABORT;
         }
 
         URL url = getDestinationURL(msgCtx);
-        if (url != null) {   // Outgoing request
-            int port = getOutboundReqPort(url);
-            String host = url.getHost();
-            setOutboundReqHeaders(httpCarbonMessage, port, host);
-            setOutboundReqProperties(httpCarbonMessage, url, port, host, false);
-            HttpResponseFuture future = clientConnector.send(httpCarbonMessage);
-            future.setHttpConnectorListener(new ResponseProcessor(msgCtx));
-        } else {
-            // Outgoing response submission back to the client
-            HttpCarbonRequest clientRequest =
-                    (HttpCarbonRequest) msgCtx.getProperty(BridgeConstants.HTTP_CLIENT_REQUEST_CARBON_MESSAGE);
-
-            if (clientRequest == null) {
-                throw new AxisFault("Client request not found");
-            }
-            try {
-                clientRequest.respond(httpCarbonMessage);
-            } catch (ServerConnectorException e) {
-                LOG.error("Error occurred while submitting the response back to the client", e);
-            }
-
+        if (url != null) {  // Outgoing request
+            sendForward(msgCtx, httpCarbonMessage, url);
+        } else { // Response submission back to the client
+            sendBack(msgCtx, httpCarbonMessage);
         }
-
         return InvocationResponse.CONTINUE;
+    }
+
+    private void sendBack(MessageContext msgCtx, HttpCarbonMessage httpCarbonMessage) throws AxisFault {
+        HttpCarbonRequest clientRequest =
+                (HttpCarbonRequest) msgCtx.getProperty(BridgeConstants.HTTP_CLIENT_REQUEST_CARBON_MESSAGE);
+
+        if (clientRequest == null) {
+            throw new AxisFault("Original client request not found");
+        }
+        try {
+            clientRequest.respond(httpCarbonMessage);
+        } catch (ServerConnectorException e) {
+            LOG.error("Error occurred while submitting the response back to the client", e);
+        }
+    }
+
+    private void sendForward(MessageContext msgCtx, HttpCarbonMessage httpCarbonMessage, URL url) {
+        int port = getOutboundReqPort(url);
+        String host = url.getHost();
+        setOutboundReqHeaders(httpCarbonMessage, port, host);
+        setOutboundReqProperties(httpCarbonMessage, url, port, host);
+        HttpResponseFuture future = clientConnector.send(httpCarbonMessage);
+        future.setHttpConnectorListener(new ResponseProcessor(msgCtx));
+    }
+
+    @Override
+    public void cleanup(MessageContext messageContext) {
+    }
+
+    @Override
+    public void stop() {
     }
 
     private URL getDestinationURL(MessageContext msgContext) throws AxisFault {
@@ -126,16 +143,12 @@ public class AxisToClientConnectorBridge extends AbstractHandler implements Tran
         setHostHeader(host, port, headers);
     }
 
-    private void setOutboundReqProperties(HttpCarbonMessage outboundRequest, URL url, int port, String host,
-                                          Boolean nonEntityBodyReq) {
+    private void setOutboundReqProperties(HttpCarbonMessage outboundRequest, URL url, int port, String host) {
         outboundRequest.setProperty(Constants.HTTP_HOST, host);
         outboundRequest.setProperty(Constants.HTTP_PORT, port);
-
         String outboundReqPath = getOutboundReqPath(url);
         outboundRequest.setProperty(Constants.TO, outboundReqPath);
-
         outboundRequest.setProperty(Constants.PROTOCOL, url.getProtocol());
-        outboundRequest.setProperty(Constants.NO_ENTITY_BODY, nonEntityBodyReq);
     }
 
     private void setHostHeader(String host, int port, HttpHeaders headers) {

@@ -1,17 +1,20 @@
-/**
- * Copyright (c) 2019, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
- * <p>
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * <p>
- * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+/*
+ *  Copyright (c) 2019, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ *
+ *  WSO2 Inc. licenses this file to you under the Apache License,
+ *  Version 2.0 (the "License"); you may not use this file except
+ *  in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing,
+ *  software distributed under the License is distributed on an
+ *  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ *  KIND, either express or implied.  See the License for the
+ *  specific language governing permissions and limitations
+ *  under the License.
+ *
  */
 package org.wso2.transports.http.bridge;
 
@@ -19,15 +22,12 @@ import org.apache.axiom.soap.SOAP11Constants;
 import org.apache.axiom.soap.SOAP12Constants;
 import org.apache.axiom.util.UIDGenerator;
 import org.apache.axis2.Constants;
-import org.apache.axis2.addressing.EndpointReference;
-import org.apache.axis2.builder.BuilderUtil;
 import org.apache.axis2.context.ConfigurationContext;
 import org.apache.axis2.context.MessageContext;
 import org.apache.axis2.description.Parameter;
 import org.apache.axis2.transport.TransportUtils;
 import org.wso2.transport.http.netty.message.HttpCarbonMessage;
 
-import java.util.Comparator;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -36,8 +36,8 @@ import java.util.TreeMap;
  */
 public class RequestUtils {
 
-    public static MessageContext convertCarbonMsgToAxis2MsgCtx(ConfigurationContext axis2ConfigurationCtx,
-                                                               HttpCarbonMessage incomingCarbonMsg) {
+    static MessageContext convertCarbonMsgToAxis2MsgCtx(ConfigurationContext axis2ConfigurationCtx,
+                                                        HttpCarbonMessage incomingCarbonMsg) {
         MessageContext msgCtx = new MessageContext();
         msgCtx.setMessageID(UIDGenerator.generateURNString());
         msgCtx.setProperty(MessageContext.CLIENT_API_NON_BLOCKING,
@@ -59,11 +59,7 @@ public class RequestUtils {
                 incomingCarbonMsg.getProperty(org.wso2.transport.http.netty.contract.Constants.ORIGIN_HOST));
 
         // http transport header names are case insensitive
-        Map<String, String> headers = new TreeMap<String, String>(new Comparator<String>() {
-            public int compare(String o1, String o2) {
-                return o1.compareToIgnoreCase(o2);
-            }
-        });
+        Map<String, String> headers = new TreeMap<>(String::compareToIgnoreCase);
         incomingCarbonMsg.getHeaders().forEach(entry -> headers.put(entry.getKey(), entry.getValue()));
         msgCtx.setProperty(MessageContext.TRANSPORT_HEADERS, headers);
         // Set the original incoming carbon message as a property
@@ -72,14 +68,7 @@ public class RequestUtils {
         return msgCtx;
     }
 
-    /**
-     * Calculate the REST_URL_POSTFIX from the request URI
-     *
-     * @param uri         - The Request URI - String
-     * @param servicePath String
-     * @return REST_URL_POSTFIX String
-     */
-    public static String getRestUrlPostfix(String uri, String servicePath) {
+    static String getRestUrlPostfix(String uri, String servicePath) {
 
         String contextServicePath = "/" + servicePath;
         if (uri.startsWith(contextServicePath)) {
@@ -136,40 +125,25 @@ public class RequestUtils {
         return uri;
     }
 
-    public static boolean isRESTRequest(String contentType) {
+    static boolean isRESTRequest(String contentType) {
         return contentType != null &&
-                (contentType.indexOf("application/xml") > -1 ||
-                        contentType.indexOf("application/x-www-form-urlencoded") > -1 ||
-                        contentType.indexOf("multipart/form-data") > -1 ||
-                        contentType.indexOf("application/json") > -1 ||
-                        contentType.indexOf("application/jwt") > -1);
+                (contentType.contains("application/xml") ||
+                        contentType.contains("application/x-www-form-urlencoded") ||
+                        contentType.contains("multipart/form-data") ||
+                        contentType.contains("application/json") ||
+                        contentType.contains("application/jwt"));
     }
 
-    public static boolean isRest(String contentType) {
+    static boolean isRest(String contentType) {
         return contentType != null &&
-                contentType.indexOf(SOAP11Constants.SOAP_11_CONTENT_TYPE) == -1 &&
-                contentType.indexOf(SOAP12Constants.SOAP_12_CONTENT_TYPE) == -1;
+                !contentType.contains(SOAP11Constants.SOAP_11_CONTENT_TYPE) &&
+                !contentType.contains(SOAP12Constants.SOAP_12_CONTENT_TYPE);
     }
 
-    public static int initializeMessageContext(MessageContext msgContext, String soapActionHeader,
-                                               String requestURI, String contentType) {
+    static int populateSOAPVersion(MessageContext msgContext, String soapActionHeader, String contentType) {
         int soapVersion = 0;
-        if (soapActionHeader != null && soapActionHeader.length() > 0 &&
-                soapActionHeader.charAt(0) == '"' && soapActionHeader.endsWith("\"")) {
-            soapActionHeader = soapActionHeader.substring(1, soapActionHeader.length() - 1);
-        }
-
-        msgContext.setSoapAction(soapActionHeader);
-        msgContext.setTo(new EndpointReference(requestURI));
-        msgContext.setServerSide(true);
-        String charSetEnc = BuilderUtil.getCharSetEncoding(contentType);
-        if (charSetEnc == null) {
-            charSetEnc = "UTF-8";
-        }
-
-        msgContext.setProperty("CHARACTER_SET_ENCODING", charSetEnc);
         if (contentType != null) {
-            if (contentType.indexOf("application/soap+xml") > -1) {
+            if (contentType.contains("application/soap+xml")) {
                 soapVersion = 2;
                 TransportUtils.processContentTypeForAction(contentType, msgContext);
             } else if (contentType.indexOf("text/xml") > -1) {
