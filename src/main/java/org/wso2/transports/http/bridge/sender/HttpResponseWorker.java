@@ -30,7 +30,6 @@ import org.apache.axis2.engine.AxisEngine;
 import org.apache.axis2.wsdl.WSDLConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.wso2.transport.http.netty.contract.HttpConnectorListener;
 import org.wso2.transport.http.netty.message.HttpCarbonMessage;
 import org.wso2.transports.http.bridge.BridgeConstants;
 
@@ -38,17 +37,24 @@ import java.util.Map;
 import java.util.TreeMap;
 
 /**
- * {@code ResponseProcessor} handles the response received for the sent request.
+ * {@code HttpResponseWorker} is the Thread which does the response processing.
  */
-public class ResponseProcessor implements HttpConnectorListener {
+public class HttpResponseWorker implements Runnable {
 
-    private static final Logger LOG = LoggerFactory.getLogger(ResponseProcessor.class);
+    private static final Logger LOG = LoggerFactory.getLogger(HttpResponseWorker.class);
 
+    private HttpCarbonMessage httpResponse;
     private MessageContext requestMsgCtx;
-    private MessageContext responseMsgCtx;
 
-    public ResponseProcessor(MessageContext requestMsgContext) {
-        this.requestMsgCtx = requestMsgContext;
+    HttpResponseWorker(MessageContext requestMsgCtx, HttpCarbonMessage httpResponse) {
+        this.httpResponse = httpResponse;
+        this.requestMsgCtx = requestMsgCtx;
+    }
+
+    @Override
+    public void run() {
+
+        MessageContext responseMsgCtx;
         try {
             responseMsgCtx = requestMsgCtx.getOperationContext().
                     getMessageContext(WSDL2Constants.MESSAGE_LABEL_IN);
@@ -68,11 +74,6 @@ public class ResponseProcessor implements HttpConnectorListener {
         responseMsgCtx.setOperationContext(requestMsgCtx.getOperationContext());
         responseMsgCtx.setConfigurationContext(requestMsgCtx.getConfigurationContext());
         responseMsgCtx.setTo(null);
-    }
-
-    @Override
-    public void onMessage(HttpCarbonMessage httpResponse) {
-
         // Set headers
         Map<String, String> headers = new TreeMap<>(String::compareToIgnoreCase);
         httpResponse.getHeaders().forEach(entry -> headers.put(entry.getKey(), entry.getValue()));
@@ -116,10 +117,4 @@ public class ResponseProcessor implements HttpConnectorListener {
             LOG.error("Error occurred while processing response message through Axis2", ex);
         }
     }
-
-    @Override
-    public void onError(Throwable throwable) {
-        LOG.error("Error while processing the response", throwable);
-    }
-
 }

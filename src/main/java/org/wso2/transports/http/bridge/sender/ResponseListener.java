@@ -16,9 +16,9 @@
  *  under the License.
  *
  */
-package org.wso2.transports.http.bridge;
+package org.wso2.transports.http.bridge.sender;
 
-import org.apache.axis2.context.ConfigurationContext;
+import org.apache.axis2.context.MessageContext;
 import org.apache.axis2.transport.base.threads.WorkerPool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,29 +26,29 @@ import org.wso2.transport.http.netty.contract.HttpConnectorListener;
 import org.wso2.transport.http.netty.message.HttpCarbonMessage;
 
 /**
- * {@code ConnectorListenerToAxisBridge} receives the {@code HttpCarbonMessage} coming from the Netty HTTP transport,
- * converts them to {@code MessageContext} and finally deliver them to the axis engine.
- *
+ * {@code ResponseListener} listens for the response expected for the sent request.
  */
-public class ConnectorListenerToAxisBridge implements HttpConnectorListener {
+public class ResponseListener implements HttpConnectorListener {
 
-    private static final Logger LOG = LoggerFactory.getLogger(ConnectorListenerToAxisBridge.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ResponseListener.class);
 
-    private ConfigurationContext configurationContext;
+    private MessageContext requestMsgCtx;
     private WorkerPool workerPool;
 
-    public ConnectorListenerToAxisBridge(ConfigurationContext configurationContext, WorkerPool workerPool) {
-        this.configurationContext = configurationContext;
+    ResponseListener(WorkerPool workerPool, MessageContext requestMsgContext) {
         this.workerPool = workerPool;
+        this.requestMsgCtx = requestMsgContext;
     }
 
-    public void onMessage(HttpCarbonMessage httpCarbonMessage) {
-        LOG.debug("Message received to HTTP transport, submitting a worker to the pool to process");
-        workerPool.execute(new HttpWorker(httpCarbonMessage, configurationContext));
+    @Override
+    public void onMessage(HttpCarbonMessage httpResponse) {
+        LOG.debug("Response received");
+        workerPool.execute(new HttpResponseWorker(requestMsgCtx, httpResponse));
     }
 
+    @Override
     public void onError(Throwable throwable) {
+        LOG.error("Error while processing the response", throwable);
     }
-
 
 }

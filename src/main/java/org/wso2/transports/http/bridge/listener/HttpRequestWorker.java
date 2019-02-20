@@ -16,7 +16,7 @@
  *  under the License.
  *
  */
-package org.wso2.transports.http.bridge;
+package org.wso2.transports.http.bridge.listener;
 
 import org.apache.axiom.om.OMAbstractFactory;
 import org.apache.axiom.soap.SOAPEnvelope;
@@ -29,10 +29,10 @@ import org.apache.axis2.context.ConfigurationContext;
 import org.apache.axis2.context.MessageContext;
 import org.apache.axis2.engine.AxisEngine;
 import org.apache.axis2.transport.TransportUtils;
-import org.apache.axis2.transport.http.HTTPConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wso2.transport.http.netty.message.HttpCarbonMessage;
+import org.wso2.transports.http.bridge.BridgeConstants;
 
 import java.net.InetSocketAddress;
 
@@ -40,16 +40,16 @@ import static org.wso2.transports.http.bridge.BridgeConstants.CONTENT_TYPE_HEADE
 import static org.wso2.transports.http.bridge.BridgeConstants.SOAP_ACTION_HEADER;
 
 /**
- * {@code HttpWorker} is the Thread which does the request processing.
+ * {@code HttpRequestWorker} is the Thread which does the request processing.
  */
-public class HttpWorker implements Runnable {
+public class HttpRequestWorker implements Runnable {
 
     private ConfigurationContext configurationContext;
     private HttpCarbonMessage incomingCarbonMsg;
 
-    private static final Logger LOG = LoggerFactory.getLogger(HttpWorker.class);
+    private static final Logger LOG = LoggerFactory.getLogger(HttpRequestWorker.class);
 
-    public HttpWorker(HttpCarbonMessage incomingCarbonMsg, ConfigurationContext configurationContext) {
+    public HttpRequestWorker(HttpCarbonMessage incomingCarbonMsg, ConfigurationContext configurationContext) {
         this.configurationContext = configurationContext;
         this.incomingCarbonMsg = incomingCarbonMsg;
     }
@@ -116,7 +116,7 @@ public class HttpWorker implements Runnable {
         }
         msgCtx.setProperty(Constants.Configuration.CHARACTER_SET_ENCODING, charSetEncoding);
 
-        msgCtx.setProperty(HTTPConstants.HTTP_METHOD, incomingCarbonMsg.getProperty(BridgeConstants.HTTP_METHOD));
+        msgCtx.setProperty(BridgeConstants.HTTP_METHOD, incomingCarbonMsg.getProperty(BridgeConstants.HTTP_METHOD));
         msgCtx.setServerSide(true);
 
         String soapAction = incomingCarbonMsg.getHeaders().get(SOAP_ACTION_HEADER);

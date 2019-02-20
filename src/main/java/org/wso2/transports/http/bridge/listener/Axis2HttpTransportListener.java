@@ -16,7 +16,7 @@
  *  under the License.
  *
  */
-package org.wso2.transports.http.bridge;
+package org.wso2.transports.http.bridge.listener;
 
 import org.apache.axis2.addressing.EndpointReference;
 import org.apache.axis2.context.ConfigurationContext;
@@ -34,6 +34,7 @@ import org.wso2.transport.http.netty.contract.ServerConnectorFuture;
 import org.wso2.transport.http.netty.contract.config.ListenerConfiguration;
 import org.wso2.transport.http.netty.contract.config.ServerBootstrapConfiguration;
 import org.wso2.transport.http.netty.contractimpl.DefaultHttpWsConnectorFactory;
+import org.wso2.transports.http.bridge.BridgeConstants;
 
 import java.util.HashMap;
 

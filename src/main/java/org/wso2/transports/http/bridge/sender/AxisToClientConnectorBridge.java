@@ -27,6 +27,8 @@ import org.apache.axis2.context.MessageContext;
 import org.apache.axis2.description.TransportOutDescription;
 import org.apache.axis2.handlers.AbstractHandler;
 import org.apache.axis2.transport.TransportSender;
+import org.apache.axis2.transport.base.threads.WorkerPool;
+import org.apache.axis2.transport.base.threads.WorkerPoolFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wso2.transport.http.netty.contract.Constants;
@@ -51,8 +53,10 @@ import java.util.HashMap;
  */
 public class AxisToClientConnectorBridge extends AbstractHandler implements TransportSender {
 
-    private HttpClientConnector clientConnector;
     private static final Logger LOG = LoggerFactory.getLogger(AxisToClientConnectorBridge.class);
+    private HttpClientConnector clientConnector;
+
+    private WorkerPool workerPool;
 
     @Override
     public void init(ConfigurationContext configurationContext, TransportOutDescription transportOutDescription) {
@@ -61,6 +65,12 @@ public class AxisToClientConnectorBridge extends AbstractHandler implements Tran
         ConnectionManager connectionManager = new ConnectionManager(senderConfiguration.getPoolConfiguration());
         clientConnector = httpWsConnectorFactory
                 .createHttpClientConnector(new HashMap<>(), senderConfiguration, connectionManager);
+        workerPool = WorkerPoolFactory.getWorkerPool(BridgeConstants.DEFAULT_WORKER_POOL_SIZE_CORE,
+                BridgeConstants.DEFAULT_WORKER_POOL_SIZE_MAX,
+                BridgeConstants.DEFAULT_WORKER_THREAD_KEEPALIVE_SEC,
+                BridgeConstants.DEFAULT_WORKER_POOL_QUEUE_LENGTH,
+                BridgeConstants.HTTP_WORKER_THREAD_GROUP_NAME,
+                BridgeConstants.HTTP_WORKER_THREAD_ID);
     }
 
     @Override
@@ -105,7 +115,7 @@ public class AxisToClientConnectorBridge extends AbstractHandler implements Tran
         setOutboundReqHeaders(httpCarbonMessage, port, host);
         setOutboundReqProperties(httpCarbonMessage, url, port, host);
         HttpResponseFuture future = clientConnector.send(httpCarbonMessage);
-        future.setHttpConnectorListener(new ResponseProcessor(msgCtx));
+        future.setHttpConnectorListener(new ResponseListener(workerPool, msgCtx));
     }
 
     @Override

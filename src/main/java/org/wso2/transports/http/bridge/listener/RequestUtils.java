@@ -16,7 +16,7 @@
  *  under the License.
  *
  */
-package org.wso2.transports.http.bridge;
+package org.wso2.transports.http.bridge.listener;
 
 import org.apache.axiom.soap.SOAP11Constants;
 import org.apache.axiom.soap.SOAP12Constants;
@@ -27,6 +27,7 @@ import org.apache.axis2.context.MessageContext;
 import org.apache.axis2.description.Parameter;
 import org.apache.axis2.transport.TransportUtils;
 import org.wso2.transport.http.netty.message.HttpCarbonMessage;
+import org.wso2.transports.http.bridge.BridgeConstants;
 
 import java.util.Map;
 import java.util.TreeMap;
