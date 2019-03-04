@@ -21,6 +21,7 @@ package org.wso2.transports.http.bridge.listener;
 import org.apache.axiom.om.OMAbstractFactory;
 import org.apache.axiom.soap.SOAPEnvelope;
 import org.apache.axiom.soap.SOAPFactory;
+import org.apache.axiom.soap.impl.llom.soap11.SOAP11Factory;
 import org.apache.axis2.AxisFault;
 import org.apache.axis2.Constants;
 import org.apache.axis2.addressing.EndpointReference;
@@ -33,6 +34,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wso2.transport.http.netty.message.HttpCarbonMessage;
 import org.wso2.transports.http.bridge.BridgeConstants;
+import org.wso2.transports.http.bridge.MessageUtils;
 
 import java.net.InetSocketAddress;
 
@@ -44,10 +46,9 @@ import static org.wso2.transports.http.bridge.BridgeConstants.SOAP_ACTION_HEADER
  */
 public class HttpRequestWorker implements Runnable {
 
+    private static final Logger LOG = LoggerFactory.getLogger(HttpRequestWorker.class);
     private ConfigurationContext configurationContext;
     private HttpCarbonMessage incomingCarbonMsg;
-
-    private static final Logger LOG = LoggerFactory.getLogger(HttpRequestWorker.class);
 
     public HttpRequestWorker(HttpCarbonMessage incomingCarbonMsg, ConfigurationContext configurationContext) {
         this.configurationContext = configurationContext;
@@ -59,6 +60,10 @@ public class HttpRequestWorker implements Runnable {
         MessageContext msgCtx = RequestUtils.convertCarbonMsgToAxis2MsgCtx(configurationContext, incomingCarbonMsg);
         processHttpRequestUri(msgCtx);
         populateProperties(msgCtx);
+
+        // TODO: Prepare msgCtx for content-aware mediation
+        MessageUtils.buildMessage(msgCtx);
+
         try {
             AxisEngine.receive(msgCtx);
         } catch (AxisFault ex) {
@@ -138,6 +143,37 @@ public class HttpRequestWorker implements Runnable {
             msgCtx.setEnvelope(envelope);
         } catch (AxisFault ex) {
             LOG.error("Error occurred while setting the soap envelope", ex);
+        }
+    }
+
+    public void processNonEntityEnclosingRESTHandler(SOAPEnvelope soapEnvelope, MessageContext msgCtx,
+                                                     boolean injectToAxis2Engine) {
+        String soapAction = incomingCarbonMsg.getHeaders().get(SOAP_ACTION_HEADER);
+        if ((soapAction != null) && soapAction.startsWith("\"") && soapAction.endsWith("\"")) {
+            soapAction = soapAction.substring(1, soapAction.length() - 1);
+        }
+
+        msgCtx.setSoapAction(soapAction);
+//        msgContext.setTo(new EndpointReference(incomingCarbonMsg.getUri()));
+        msgCtx.setServerSide(true);
+        msgCtx.setDoingREST(true);
+//        if (!(incomingCarbonMsg.isEntityEnclosing())) {
+//            msgContext.setProperty(BridgeConstants.NO_ENTITY_BODY, Boolean.TRUE);
+//        }
+
+        try {
+            if (soapEnvelope == null) {
+                msgCtx.setEnvelope(new SOAP11Factory().getDefaultEnvelope());
+            } else {
+                msgCtx.setEnvelope(soapEnvelope);
+            }
+
+
+            if (injectToAxis2Engine) {
+                AxisEngine.receive(msgCtx);
+            }
+        } catch (Exception axisFault) {
+            axisFault.printStackTrace();
         }
     }
 }

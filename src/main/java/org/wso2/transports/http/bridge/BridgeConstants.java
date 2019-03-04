@@ -23,6 +23,8 @@ package org.wso2.transports.http.bridge;
  */
 public class BridgeConstants {
 
+    public static final String NO_ENTITY_BODY = "NO_ENTITY_BODY";
+
     public static final String REMOTE_HOST = "REMOTE_HOST";
     /* Thread pool related constants */
     public static final int DEFAULT_WORKER_POOL_SIZE_CORE = 400;
@@ -47,5 +49,8 @@ public class BridgeConstants {
     public static final String REST_REQUEST_CONTENT_TYPE = "synapse.internal.rest.contentType";
     public static final String HTTP_CARBON_MESSAGE = "HTTP_CARBON_MESSAGE";
     public static final String HTTP_CLIENT_REQUEST_CARBON_MESSAGE = "HTTP_CLIENT_REQUEST_CARBON_MESSAGE";
+
+    public static final String BRIDGE_PIPE = "bridge.pipe";
+    public static final String MESSAGE_BUILDER_INVOKED = "message.builder.invoked";
 
 }
