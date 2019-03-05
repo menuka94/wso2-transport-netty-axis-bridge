@@ -53,4 +53,7 @@ public class BridgeConstants {
     public static final String BRIDGE_PIPE = "bridge.pipe";
     public static final String MESSAGE_BUILDER_INVOKED = "message.builder.invoked";
 
+    public static final long NO_CONTENT_LENGTH_FOUND = -1;
+    public static final short ONE_BYTE = 1;
+
 }

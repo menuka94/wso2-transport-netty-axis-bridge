@@ -34,7 +34,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wso2.transport.http.netty.message.HttpCarbonMessage;
 import org.wso2.transports.http.bridge.BridgeConstants;
-import org.wso2.transports.http.bridge.MessageUtils;
 
 import java.net.InetSocketAddress;
 
@@ -60,10 +59,6 @@ public class HttpRequestWorker implements Runnable {
         MessageContext msgCtx = RequestUtils.convertCarbonMsgToAxis2MsgCtx(configurationContext, incomingCarbonMsg);
         processHttpRequestUri(msgCtx);
         populateProperties(msgCtx);
-
-        // TODO: Prepare msgCtx for content-aware mediation
-        MessageUtils.buildMessage(msgCtx);
-
         try {
             AxisEngine.receive(msgCtx);
         } catch (AxisFault ex) {
@@ -145,6 +140,8 @@ public class HttpRequestWorker implements Runnable {
             LOG.error("Error occurred while setting the soap envelope", ex);
         }
     }
+
+
 
     public void processNonEntityEnclosingRESTHandler(SOAPEnvelope soapEnvelope, MessageContext msgCtx,
                                                      boolean injectToAxis2Engine) {
