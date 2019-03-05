@@ -14,16 +14,12 @@ import org.apache.axis2.engine.Handler;
 import org.apache.axis2.engine.Phase;
 import org.apache.axis2.transport.RequestResponseTransport;
 import org.apache.axis2.transport.TransportUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wso2.transport.http.netty.message.HttpCarbonMessage;
 import org.wso2.transport.http.netty.message.HttpMessageDataStreamer;
 import org.wso2.transports.http.bridge.BridgeConstants;
 
-import java.io.BufferedInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
@@ -64,32 +60,12 @@ public class MessageUtils {
         }
 
         InputStream in = httpMessageDataStreamer.getInputStream();
-        ByteArrayOutputStream byteArrayOutputStream = null;
-
-        BufferedInputStream bufferedInputStream = (BufferedInputStream) msgCtx
-                .getProperty(BridgeConstants.BUFFERED_INPUT_STREAM);
-        if (bufferedInputStream != null) {
-            try {
-                bufferedInputStream.reset();
-                bufferedInputStream.mark(0);
-            } catch (IOException e) {
-//                handleException("Error while checking bufferedInputStream", e);
-            }
-
-        } else {
-            bufferedInputStream = new BufferedInputStream(in);
-            // TODO: need to handle properly for the moment lets use around 100k
-            // buffer.
-            bufferedInputStream.mark(128 * 1024);
-            msgCtx.setProperty(BridgeConstants.BUFFERED_INPUT_STREAM,
-                    bufferedInputStream);
-        }
 
         boolean earlyBuild = false; // TODO: implement properly
 
         OMElement element = null;
         try {
-            element = messageBuilder.getDocument(msgCtx, bufferedInputStream != null ? bufferedInputStream : in);
+            element = messageBuilder.getDocument(msgCtx, in);
             if (element != null) {
                 msgCtx.setEnvelope(TransportUtils.createSOAPEnvelope(element));
                 msgCtx.setProperty(DeferredMessageBuilder.RELAY_FORMATTERS_MAP,
@@ -110,7 +86,7 @@ public class MessageUtils {
                     try {
 
                         if (BridgeConstants.JSON_CONTENT_TYPE.equals(contentType) && forceJSONValidation) {
-                            rawData = byteArrayOutputStream.toString();
+                            rawData = in.toString();
                             JsonParser jsonParser = new JsonParser();
                             jsonParser.parse(rawData);
                         }
@@ -121,7 +97,7 @@ public class MessageUtils {
                         }
                     } catch (Exception e) {
                         if (rawData == null) {
-                            rawData = byteArrayOutputStream.toString();
+                            rawData = in.toString();
                         }
                         LOGGER.error("Error while building the message.\n" + rawData);
                         msgCtx.setProperty(BridgeConstants.RAW_PAYLOAD, rawData);
@@ -130,8 +106,6 @@ public class MessageUtils {
                 }
             }
         } catch (Exception e) {
-            //Clearing the buffer when there is an exception occurred.
-//            consumeAndDiscardMessage(msgCtx);
             msgCtx.setProperty(BridgeConstants.MESSAGE_BUILDER_INVOKED, Boolean.TRUE);
 //            handleException("Error while building Passthrough stream", e);
         }
@@ -266,70 +240,23 @@ public class MessageUtils {
 
         if (inputStream != null) {
             // read ahead few characters to see if the stream is valid.
-            ReadOnlyBIS readOnlyStream = new ReadOnlyBIS(inputStream);
 
             /**
              * Checks for all empty or all whitespace streams and if found  sets isEmptyPayload to false. The while
              * loop exits if found any character other than space or end of stream reached.
              **/
-            int c = readOnlyStream.read();
+            int c = inputStream.read();
             while (c != -1) {
                 if (c != 32) {
                     //if not a space, should be some character in entity body
                     isEmptyPayload = false;
                     break;
                 }
-                c = readOnlyStream.read();
+                c = inputStream.read();
             }
-            readOnlyStream.reset();
             inputStream.reset();
         }
 
         return isEmptyPayload;
-    }
-
-    /**
-     * An Un-closable, Read-Only, Reusable, BufferedInputStream.
-     */
-    private static class ReadOnlyBIS extends BufferedInputStream {
-        private static final String LOG_STREAM = "org.apache.synapse.transport.passthru.util.ReadOnlyStream";
-        private static final Log logger = LogFactory.getLog(LOG_STREAM);
-
-        public ReadOnlyBIS(InputStream inputStream) {
-            super(inputStream);
-            super.mark(Integer.MAX_VALUE);
-            if (logger.isDebugEnabled()) {
-                logger.debug("<init>");
-            }
-        }
-
-        @Override
-        public void close() throws IOException {
-            super.reset();
-            //super.mark(Integer.MAX_VALUE);
-            if (logger.isDebugEnabled()) {
-                logger.debug("#close");
-            }
-        }
-
-        @Override
-        public void mark(int readlimit) {
-            if (logger.isDebugEnabled()) {
-                logger.debug("#mark");
-            }
-        }
-
-        @Override
-        public boolean markSupported() {
-            return true; // but we don't mark.
-        }
-
-        @Override
-        public long skip(long n) {
-            if (logger.isDebugEnabled()) {
-                logger.debug("#skip");
-            }
-            return 0;
-        }
     }
 }

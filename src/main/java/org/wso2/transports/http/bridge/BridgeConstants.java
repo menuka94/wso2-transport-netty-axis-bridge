@@ -41,7 +41,7 @@ public class BridgeConstants {
     public static final String SOAP_ACTION_HEADER = "SOAPAction";
     public static final String TRANSFER_ENCODING = "Transfer-Encoding";
 
-    public static final  String JSON_CONTENT_TYPE = "application/json";
+    public static final String JSON_CONTENT_TYPE = "application/json";
 
     public static final String CONTENT_LEN = "Content-Length";
 
@@ -61,7 +61,6 @@ public class BridgeConstants {
     public static final short ONE_BYTE = 1;
 
     public static final String INVOKED_REST = "invokedREST";
-    public static final String BUFFERED_INPUT_STREAM = "bufferedInputStream";
 
     public static final String DEFAULT_CONTENT_TYPE = "application/octet-stream";
     public static final String RELAY_EARLY_BUILD = "relay_early_build";
