@@ -39,6 +39,11 @@ public class BridgeConstants {
     public static final String HTTP_REASON_PHRASE = "HTTP_REASON_PHRASE";
     public static final String CONTENT_TYPE_HEADER = "Content-Type";
     public static final String SOAP_ACTION_HEADER = "SOAPAction";
+    public static final String TRANSFER_ENCODING = "Transfer-Encoding";
+
+    public static final  String JSON_CONTENT_TYPE = "application/json";
+
+    public static final String CONTENT_LEN = "Content-Length";
 
     public static final String HTTP_STATUS_CODE_PROP = "HTTP_SC";
     public static final String HTTP_STATUS_CODE_DESCRIPTION_PROP = "HTTP_SC_DESC";
@@ -50,10 +55,15 @@ public class BridgeConstants {
     public static final String HTTP_CARBON_MESSAGE = "HTTP_CARBON_MESSAGE";
     public static final String HTTP_CLIENT_REQUEST_CARBON_MESSAGE = "HTTP_CLIENT_REQUEST_CARBON_MESSAGE";
 
-    public static final String BRIDGE_PIPE = "bridge.pipe";
     public static final String MESSAGE_BUILDER_INVOKED = "message.builder.invoked";
 
     public static final long NO_CONTENT_LENGTH_FOUND = -1;
     public static final short ONE_BYTE = 1;
 
+    public static final String INVOKED_REST = "invokedREST";
+    public static final String BUFFERED_INPUT_STREAM = "bufferedInputStream";
+
+    public static final String DEFAULT_CONTENT_TYPE = "application/octet-stream";
+    public static final String RELAY_EARLY_BUILD = "relay_early_build";
+    public static final String RAW_PAYLOAD = "RAW_PAYLOAD";
 }
