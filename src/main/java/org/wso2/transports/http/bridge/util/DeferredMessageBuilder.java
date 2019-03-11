@@ -126,7 +126,7 @@ public class DeferredMessageBuilder {
                     && trasferEncoded == null) {
                 msgCtx.setProperty(BridgeConstants.NO_ENTITY_BODY, true);
                 msgCtx.setProperty(Constants.Configuration.CONTENT_TYPE, "");
-                msgCtx.setProperty(BridgeConstants.RELAY_EARLY_BUILD, true);
+//                msgCtx.setProperty(BridgeConstants.RELAY_EARLY_BUILD, true);
                 return new SOAP11Factory().getDefaultEnvelope();
             }
         }

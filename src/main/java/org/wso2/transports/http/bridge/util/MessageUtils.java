@@ -31,8 +31,6 @@ public class MessageUtils {
     private static final Logger LOGGER = LoggerFactory.getLogger(MessageUtils.class);
     private static final DeferredMessageBuilder messageBuilder = new DeferredMessageBuilder();
 
-    private static boolean forceXmlValidation = false;
-    private static boolean forceJSONValidation = false;
     private static boolean noAddressingHandler = false;
 
     private static volatile Handler addressingInHandler = null;
@@ -61,7 +59,7 @@ public class MessageUtils {
 
         InputStream in = httpMessageDataStreamer.getInputStream();
 
-        boolean earlyBuild = false; // TODO: implement properly
+        // TODO: implement earlyBuild
 
         OMElement element = null;
         try {
@@ -71,13 +69,6 @@ public class MessageUtils {
                 msgCtx.setProperty(DeferredMessageBuilder.RELAY_FORMATTERS_MAP,
                         messageBuilder.getFormatters());
                 msgCtx.setProperty(BridgeConstants.MESSAGE_BUILDER_INVOKED, Boolean.TRUE);
-
-                earlyBuild = msgCtx.getProperty(BridgeConstants.RELAY_EARLY_BUILD) != null ? (Boolean) msgCtx
-                        .getProperty(BridgeConstants.RELAY_EARLY_BUILD) : earlyBuild;
-
-                if (!earlyBuild) {
-                    processAddressing(msgCtx);
-                }
 
                 // TODO: implement XML/JSON force validation
             }
@@ -204,7 +195,7 @@ public class MessageUtils {
 
     /**
      * Function to check given inputstream is empty or not
-     * Used to check whether content of the payload input stream is empty or not
+     * Used to check whether content of the payload input stream is empty or not.
      *
      * @param inputStream target inputstream
      * @return true if it is a empty stream
