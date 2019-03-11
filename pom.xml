@@ -4,7 +4,7 @@
     <groupId>org.wso2.transports.http.bridge</groupId>
     <artifactId>transport-netty-axis-bridge</artifactId>
     <packaging>bundle</packaging>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.0.0</version>
     <name>transport-netty-axis2-bridge</name>
     <url>http://maven.apache.org</url>
     <parent>
