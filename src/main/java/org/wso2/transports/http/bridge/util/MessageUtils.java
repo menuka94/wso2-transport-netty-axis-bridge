@@ -1,6 +1,5 @@
 package org.wso2.transports.http.bridge.util;
 
-import com.google.gson.JsonParser;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import org.apache.axiom.om.OMElement;
 import org.apache.axis2.AxisFault;
@@ -57,6 +56,7 @@ public class MessageUtils {
                 contentLength = httpCarbonMessage.countMessageLengthTill(BridgeConstants.ONE_BYTE);
             }
         } catch (NumberFormatException e) {
+            LOGGER.error("NumberFormatException");
         }
 
         InputStream in = httpMessageDataStreamer.getInputStream();
@@ -79,31 +79,7 @@ public class MessageUtils {
                     processAddressing(msgCtx);
                 }
 
-                //force validation makes sure that the xml is well formed (not having multi root element), and the json
-                // message is valid (not having any content after the final enclosing bracket)
-                if (forceXmlValidation || forceJSONValidation) {
-                    String rawData = null;
-                    try {
-
-                        if (BridgeConstants.JSON_CONTENT_TYPE.equals(contentType) && forceJSONValidation) {
-                            rawData = in.toString();
-                            JsonParser jsonParser = new JsonParser();
-                            jsonParser.parse(rawData);
-                        }
-
-                        msgCtx.getEnvelope().buildWithAttachments();
-                        if (msgCtx.getEnvelope().getBody().getFirstElement() != null) {
-                            msgCtx.getEnvelope().getBody().getFirstElement().buildNext();
-                        }
-                    } catch (Exception e) {
-                        if (rawData == null) {
-                            rawData = in.toString();
-                        }
-                        LOGGER.error("Error while building the message.\n" + rawData);
-                        msgCtx.setProperty(BridgeConstants.RAW_PAYLOAD, rawData);
-                        throw e;
-                    }
-                }
+                // TODO: implement XML/JSON force validation
             }
         } catch (Exception e) {
             msgCtx.setProperty(BridgeConstants.MESSAGE_BUILDER_INVOKED, Boolean.TRUE);
