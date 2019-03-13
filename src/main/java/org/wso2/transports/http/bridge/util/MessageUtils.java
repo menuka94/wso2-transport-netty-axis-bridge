@@ -37,7 +37,9 @@ public class MessageUtils {
 
     public static void buildMessage(MessageContext msgCtx) {
 
-        boolean byteChannelAlreadySet = false;
+        if (msgCtx.getProperty(BridgeConstants.MESSAGE_BUILDER_INVOKED) != null) {
+            return;
+        }
 
         HttpCarbonMessage httpCarbonMessage =
                 (HttpCarbonMessage) msgCtx.getProperty(BridgeConstants.HTTP_CARBON_MESSAGE);
