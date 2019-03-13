@@ -39,7 +39,8 @@
     <properties>
         <transport.http.bridge.package.export.version>${project.version}</transport.http.bridge.package.export.version>
         <axis2.transport.base.version>1.6.1-wso2v28</axis2.transport.base.version>
-        <wso2.transports.http.version>6.0.261-SNAPSHOT</wso2.transports.http.version>
+        <wso2.transports.http.version>6.0.275-SNAPSHOT</wso2.transports.http.version>
+        <!--<wso2.transports.http.version>6.0.261-SNAPSHOT</wso2.transports.http.version>-->
         <wso2.transports.http.import.package.version.range>
             [6.0.0, 7.0.0)
         </wso2.transports.http.import.package.version.range>
