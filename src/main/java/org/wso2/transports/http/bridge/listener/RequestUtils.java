@@ -55,7 +55,7 @@ public class RequestUtils {
         msgCtx.setProperty(Constants.Configuration.TRANSPORT_IN_URL,
                 incomingCarbonMsg.getProperty(org.wso2.transport.http.netty.contract.Constants.REQUEST_URL));
         msgCtx.setProperty(MessageContext.REMOTE_ADDR,
-                incomingCarbonMsg.getProperty(org.wso2.transport.http.netty.contract.Constants.REMOTE_ADDRESS));
+                incomingCarbonMsg.getProperty(org.wso2.transport.http.netty.contract.Constants.REMOTE_ADDRESS).toString());
         msgCtx.setProperty(BridgeConstants.REMOTE_HOST,
                 incomingCarbonMsg.getProperty(org.wso2.transport.http.netty.contract.Constants.ORIGIN_HOST));
 
