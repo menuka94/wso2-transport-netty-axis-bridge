@@ -4,7 +4,7 @@
     <groupId>org.wso2.transports.http.bridge</groupId>
     <artifactId>transport-netty-axis-bridge</artifactId>
     <packaging>bundle</packaging>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.0.0</version>
     <name>transport-netty-axis2-bridge</name>
     <url>http://maven.apache.org</url>
     <parent>
@@ -29,12 +29,18 @@
             <artifactId>axis2-transport-base</artifactId>
             <version>${axis2.transport.base.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <version>${com.google.code.gson.version}</version>
+        </dependency>
     </dependencies>
 
     <properties>
         <transport.http.bridge.package.export.version>${project.version}</transport.http.bridge.package.export.version>
         <axis2.transport.base.version>1.6.1-wso2v28</axis2.transport.base.version>
-        <wso2.transports.http.version>6.0.261-SNAPSHOT</wso2.transports.http.version>
+        <wso2.transports.http.version>6.0.275-SNAPSHOT</wso2.transports.http.version>
+        <!--<wso2.transports.http.version>6.0.261-SNAPSHOT</wso2.transports.http.version>-->
         <wso2.transports.http.import.package.version.range>
             [6.0.0, 7.0.0)
         </wso2.transports.http.import.package.version.range>
@@ -51,6 +57,7 @@
             org.wso2.transport.http.netty.*;version="${wso2.transports.http.import.package.version.range}",
             *; resolution:=optional
         </import.package>
+        <com.google.code.gson.version>2.7</com.google.code.gson.version>
     </properties>
 
     <build>
