@@ -37,7 +37,7 @@ public class MessageUtils {
 
     public static void buildMessage(MessageContext msgCtx) {
 
-        if (msgCtx.getProperty(BridgeConstants.MESSAGE_BUILDER_INVOKED) != null) {
+        if (Boolean.TRUE.equals(msgCtx.getProperty(BridgeConstants.MESSAGE_BUILDER_INVOKED))) {
             return;
         }
 
@@ -45,7 +45,6 @@ public class MessageUtils {
                 (HttpCarbonMessage) msgCtx.getProperty(BridgeConstants.HTTP_CARBON_MESSAGE);
 
         HttpMessageDataStreamer httpMessageDataStreamer = new HttpMessageDataStreamer(httpCarbonMessage);
-        String contentType = httpCarbonMessage.getHeader(HttpHeaderNames.CONTENT_TYPE.toString());
 
         long contentLength = BridgeConstants.NO_CONTENT_LENGTH_FOUND;
         String lengthStr = httpCarbonMessage.getHeader(HttpHeaderNames.CONTENT_LENGTH.toString());

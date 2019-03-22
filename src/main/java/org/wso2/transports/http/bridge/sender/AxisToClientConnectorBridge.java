@@ -20,6 +20,8 @@ package org.wso2.transports.http.bridge.sender;
 
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpHeaders;
+import org.apache.axiom.soap.SOAPBody;
+import org.apache.axiom.soap.SOAPEnvelope;
 import org.apache.axis2.AxisFault;
 import org.apache.axis2.addressing.EndpointReference;
 import org.apache.axis2.context.ConfigurationContext;
@@ -41,10 +43,15 @@ import org.wso2.transport.http.netty.contractimpl.DefaultHttpWsConnectorFactory;
 import org.wso2.transport.http.netty.contractimpl.sender.channel.pool.ConnectionManager;
 import org.wso2.transport.http.netty.message.HttpCarbonMessage;
 import org.wso2.transport.http.netty.message.HttpCarbonRequest;
+import org.wso2.transport.http.netty.message.HttpMessageDataStreamer;
+import org.wso2.transport.http.netty.message.PooledDataStreamerFactory;
 import org.wso2.transports.http.bridge.BridgeConstants;
 
+import java.io.IOException;
+import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.charset.Charset;
 import java.util.HashMap;
 
 /**
@@ -76,25 +83,58 @@ public class AxisToClientConnectorBridge extends AbstractHandler implements Tran
     @Override
     public InvocationResponse invoke(MessageContext msgCtx) throws AxisFault {
 
-        HttpCarbonMessage httpCarbonMessage =
+        HttpCarbonMessage outboundHttpCarbonMsg =
                 (HttpCarbonMessage) msgCtx.getProperty(BridgeConstants.HTTP_CARBON_MESSAGE);
 
-        if (httpCarbonMessage == null) {
+        if(Boolean.TRUE.equals(msgCtx.getProperty(BridgeConstants.MESSAGE_BUILDER_INVOKED))) {
+            final HttpMessageDataStreamer outboundMsgDataStreamer = getHttpMessageDataStreamer(outboundHttpCarbonMsg);
+            final OutputStream outputStream = outboundMsgDataStreamer.getOutputStream();
+            String soapEnvelopeString = msgCtx.getEnvelope().toString();
+            try {
+                outputStream.write(soapEnvelopeString.getBytes(Charset.defaultCharset()));
+            } catch (IOException e) {
+                LOG.error(e.getMessage());
+            }
+
+        }
+
+        if (outboundHttpCarbonMsg == null) {
             LOG.info("Carbon Message not found, " +
                     "sending " +
                     "requests originated from non HTTP transport is not supported yet");
             return InvocationResponse.ABORT;
         }
 
+        msgCtx.setProperty(BridgeConstants.HTTP_CARBON_MESSAGE, outboundHttpCarbonMsg);
+
         URL url = getDestinationURL(msgCtx);
         if (url != null) {  // Outgoing request
-            sendForward(msgCtx, httpCarbonMessage, url);
+            sendForward(msgCtx, outboundHttpCarbonMsg, url);
         } else { // Response submission back to the client
-            sendBack(msgCtx, httpCarbonMessage);
+            sendBack(msgCtx, outboundHttpCarbonMsg);
         }
         return InvocationResponse.CONTINUE;
     }
 
+    private void serializeDataSource(OutputStream messageOutputStream) {
+        if (messageOutputStream != null) {
+
+        }
+    }
+
+    private HttpMessageDataStreamer getHttpMessageDataStreamer(HttpCarbonMessage outboundRequestMsg) {
+        final HttpMessageDataStreamer outboundMsgDataStreamer;
+        final PooledDataStreamerFactory pooledDataStreamerFactory = (PooledDataStreamerFactory)
+                outboundRequestMsg.getProperty(BridgeConstants.POOLED_BYTE_BUFFER_FACTORY);
+        if (pooledDataStreamerFactory != null) {
+            outboundMsgDataStreamer = pooledDataStreamerFactory.createHttpDataStreamer(outboundRequestMsg);
+        } else {
+            outboundMsgDataStreamer = new HttpMessageDataStreamer(outboundRequestMsg);
+        }
+        return outboundMsgDataStreamer;
+    }
+
+    // response submission back to the client (client <-- transport)
     private void sendBack(MessageContext msgCtx, HttpCarbonMessage httpCarbonMessage) throws AxisFault {
         HttpCarbonRequest clientRequest =
                 (HttpCarbonRequest) msgCtx.getProperty(BridgeConstants.HTTP_CLIENT_REQUEST_CARBON_MESSAGE);
@@ -109,6 +149,7 @@ public class AxisToClientConnectorBridge extends AbstractHandler implements Tran
         }
     }
 
+    // outgoing request (transport --> remote)
     private void sendForward(MessageContext msgCtx, HttpCarbonMessage httpCarbonMessage, URL url) {
         int port = getOutboundReqPort(url);
         String host = url.getHost();
@@ -134,8 +175,7 @@ public class AxisToClientConnectorBridge extends AbstractHandler implements Tran
         EndpointReference endpointReference;
         if (transportURL != null) {
             endpointReference = new EndpointReference(transportURL);
-        } else if (
-                (msgContext.getTo() != null) && !msgContext.getTo().hasAnonymousAddress()) {
+        } else if ((msgContext.getTo() != null) && !msgContext.getTo().hasAnonymousAddress()) {
             endpointReference = msgContext.getTo();
         } else {
             return null;

@@ -65,4 +65,6 @@ public class BridgeConstants {
     public static final String DEFAULT_CONTENT_TYPE = "application/octet-stream";
     public static final String RELAY_EARLY_BUILD = "relay_early_build";
     public static final String RAW_PAYLOAD = "RAW_PAYLOAD";
+
+    public static final String POOLED_BYTE_BUFFER_FACTORY = "POOLED_BYTE_BUFFER_FACTORY";
 }
