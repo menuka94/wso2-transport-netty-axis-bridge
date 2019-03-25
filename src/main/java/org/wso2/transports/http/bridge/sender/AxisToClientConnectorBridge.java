@@ -20,6 +20,7 @@ package org.wso2.transports.http.bridge.sender;
 
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpHeaders;
+import org.apache.axiom.soap.SOAPBody;
 import org.apache.axiom.soap.SOAPEnvelope;
 import org.apache.axis2.AxisFault;
 import org.apache.axis2.addressing.EndpointReference;
@@ -88,18 +89,6 @@ public class AxisToClientConnectorBridge extends AbstractHandler implements Tran
                 (HttpCarbonMessage) msgCtx.getProperty(BridgeConstants.HTTP_CARBON_MESSAGE);
         HttpCarbonMessage outboundHttpCarbonMsg = RequestUtils.convertAxis2MsgCtxToCarbonMsg(msgCtx, true);
 
-        if(Boolean.TRUE.equals(msgCtx.getProperty(BridgeConstants.MESSAGE_BUILDER_INVOKED))) {
-            final HttpMessageDataStreamer outboundMsgDataStreamer = getHttpMessageDataStreamer(outboundHttpCarbonMsg);
-            final OutputStream outputStream = outboundMsgDataStreamer.getOutputStream();
-            SOAPEnvelope soapEnvelope = msgCtx.getEnvelope();
-            String soapEnvelopeString = soapEnvelope.getBody().toString();
-            try {
-                outputStream.write(soapEnvelopeString.getBytes(Charset.defaultCharset()));
-            } catch (IOException e) {
-                LOG.error(e.getMessage());
-            }
-
-        }
 
         if (outboundHttpCarbonMsg == null) {
             LOG.info("Carbon Message not found, " +
@@ -153,7 +142,29 @@ public class AxisToClientConnectorBridge extends AbstractHandler implements Tran
         setOutboundReqHeaders(httpCarbonMessage, port, host);
         setOutboundReqProperties(httpCarbonMessage, url, port, host);
         HttpResponseFuture future = clientConnector.send(httpCarbonMessage);
+
         future.setHttpConnectorListener(new ResponseListener(workerPool, msgCtx));
+
+        // serialize
+        if(Boolean.TRUE.equals(msgCtx.getProperty(BridgeConstants.MESSAGE_BUILDER_INVOKED))) {
+            final HttpMessageDataStreamer outboundMsgDataStreamer = getHttpMessageDataStreamer(httpCarbonMessage);
+            final OutputStream outputStream = outboundMsgDataStreamer.getOutputStream();
+            SOAPEnvelope soapEnvelope = msgCtx.getEnvelope();
+            SOAPBody body = soapEnvelope.getBody();
+            String soapEnvelopeString = soapEnvelope.getBody().toString();
+            try {
+                outputStream.write(soapEnvelopeString.getBytes(Charset.defaultCharset()));
+            } catch (IOException e) {
+                LOG.error(e.getMessage());
+            } finally {
+                try {
+                    outputStream.close();
+                } catch (IOException e) {
+                    LOG.error(e.getMessage());
+                }
+            }
+        }
+
     }
 
     @Override

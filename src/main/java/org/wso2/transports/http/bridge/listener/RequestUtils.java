@@ -84,8 +84,9 @@ public class RequestUtils {
         HttpCarbonMessage httpCarbonMessage;
         if (isRequest) {
             httpCarbonMessage = new HttpCarbonMessage(
-                    new DefaultHttpRequest(HttpVersion.HTTP_1_1, httpMethod, ""));
+                    new DefaultHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.POST, ""));
         } else {
+            // Response
             httpCarbonMessage = new HttpCarbonMessage(
                     new DefaultHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK));
         }
@@ -94,7 +95,7 @@ public class RequestUtils {
 
         headers.forEach(httpCarbonMessage::setHeader);
 
-        httpCarbonMessage.completeMessage();
+//        httpCarbonMessage.completeMessage();
         return httpCarbonMessage;
     }
 
