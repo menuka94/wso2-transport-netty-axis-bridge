@@ -18,6 +18,11 @@
  */
 package org.wso2.transports.http.bridge.listener;
 
+import io.netty.handler.codec.http.DefaultHttpRequest;
+import io.netty.handler.codec.http.DefaultHttpResponse;
+import io.netty.handler.codec.http.HttpMethod;
+import io.netty.handler.codec.http.HttpResponseStatus;
+import io.netty.handler.codec.http.HttpVersion;
 import org.apache.axiom.soap.SOAP11Constants;
 import org.apache.axiom.soap.SOAP12Constants;
 import org.apache.axiom.util.UIDGenerator;
@@ -26,6 +31,8 @@ import org.apache.axis2.context.ConfigurationContext;
 import org.apache.axis2.context.MessageContext;
 import org.apache.axis2.description.Parameter;
 import org.apache.axis2.transport.TransportUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.wso2.transport.http.netty.message.HttpCarbonMessage;
 import org.wso2.transports.http.bridge.BridgeConstants;
 
@@ -36,6 +43,7 @@ import java.util.TreeMap;
  * {@code RequestUtils} contains utilities which is used in request message flow.
  */
 public class RequestUtils {
+    private static final Logger LOG = LoggerFactory.getLogger(RequestUtils.class);
 
     static MessageContext convertCarbonMsgToAxis2MsgCtx(ConfigurationContext axis2ConfigurationCtx,
                                                         HttpCarbonMessage incomingCarbonMsg) {
@@ -54,8 +62,10 @@ public class RequestUtils {
         msgCtx.setServerSide(true);
         msgCtx.setProperty(Constants.Configuration.TRANSPORT_IN_URL,
                 incomingCarbonMsg.getProperty(org.wso2.transport.http.netty.contract.Constants.REQUEST_URL));
-        msgCtx.setProperty(MessageContext.REMOTE_ADDR,
-                incomingCarbonMsg.getProperty(org.wso2.transport.http.netty.contract.Constants.REMOTE_ADDRESS).toString());
+
+        msgCtx.setProperty(MessageContext.REMOTE_ADDR, incomingCarbonMsg.getProperty(
+                org.wso2.transport.http.netty.contract.Constants.REMOTE_ADDRESS).toString());
+
         msgCtx.setProperty(BridgeConstants.REMOTE_HOST,
                 incomingCarbonMsg.getProperty(org.wso2.transport.http.netty.contract.Constants.ORIGIN_HOST));
 
@@ -69,6 +79,29 @@ public class RequestUtils {
         return msgCtx;
     }
 
+    public static HttpCarbonMessage convertAxis2MsgCtxToCarbonMsg(MessageContext msgCtx, boolean isRequest) {
+        HttpMethod httpMethod = new HttpMethod((String) msgCtx.getProperty(BridgeConstants.HTTP_METHOD));
+        HttpCarbonMessage httpCarbonMessage;
+        if (isRequest) {
+            httpCarbonMessage = new HttpCarbonMessage(
+                    new DefaultHttpRequest(HttpVersion.HTTP_1_1, httpMethod, ""));
+        } else {
+            httpCarbonMessage = new HttpCarbonMessage(
+                    new DefaultHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK));
+        }
+
+        Map<String, String> headers = (Map<String, String>) msgCtx.getProperty(MessageContext.TRANSPORT_HEADERS);
+
+        headers.forEach(httpCarbonMessage::setHeader);
+
+        httpCarbonMessage.completeMessage();
+        return httpCarbonMessage;
+    }
+
+    private static void printHeaders(String key, Object value) {
+        LOG.info("{}: {}", key, value);
+    }
+
     static String getRestUrlPostfix(String uri, String servicePath) {
 
         String contextServicePath = "/" + servicePath;
@@ -78,7 +111,7 @@ public class RequestUtils {
                     contextServicePath.length());
             // discard [proxy] service name if any
             int pos = uri.indexOf("/", 1);
-            if (pos > 0) {
+           if (pos > 0) {
                 uri = uri.substring(pos);
             } else {
                 pos = uri.indexOf("?");

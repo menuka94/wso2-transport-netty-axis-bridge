@@ -20,7 +20,6 @@ package org.wso2.transports.http.bridge.sender;
 
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpHeaders;
-import org.apache.axiom.soap.SOAPBody;
 import org.apache.axiom.soap.SOAPEnvelope;
 import org.apache.axis2.AxisFault;
 import org.apache.axis2.addressing.EndpointReference;
@@ -46,6 +45,7 @@ import org.wso2.transport.http.netty.message.HttpCarbonRequest;
 import org.wso2.transport.http.netty.message.HttpMessageDataStreamer;
 import org.wso2.transport.http.netty.message.PooledDataStreamerFactory;
 import org.wso2.transports.http.bridge.BridgeConstants;
+import org.wso2.transports.http.bridge.listener.RequestUtils;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -82,14 +82,17 @@ public class AxisToClientConnectorBridge extends AbstractHandler implements Tran
 
     @Override
     public InvocationResponse invoke(MessageContext msgCtx) throws AxisFault {
+        LOG.info("invoke");
 
-        HttpCarbonMessage outboundHttpCarbonMsg =
+        HttpCarbonMessage originalCarbonMessage =
                 (HttpCarbonMessage) msgCtx.getProperty(BridgeConstants.HTTP_CARBON_MESSAGE);
+        HttpCarbonMessage outboundHttpCarbonMsg = RequestUtils.convertAxis2MsgCtxToCarbonMsg(msgCtx, true);
 
         if(Boolean.TRUE.equals(msgCtx.getProperty(BridgeConstants.MESSAGE_BUILDER_INVOKED))) {
             final HttpMessageDataStreamer outboundMsgDataStreamer = getHttpMessageDataStreamer(outboundHttpCarbonMsg);
             final OutputStream outputStream = outboundMsgDataStreamer.getOutputStream();
-            String soapEnvelopeString = msgCtx.getEnvelope().toString();
+            SOAPEnvelope soapEnvelope = msgCtx.getEnvelope();
+            String soapEnvelopeString = soapEnvelope.getBody().toString();
             try {
                 outputStream.write(soapEnvelopeString.getBytes(Charset.defaultCharset()));
             } catch (IOException e) {
@@ -114,12 +117,6 @@ public class AxisToClientConnectorBridge extends AbstractHandler implements Tran
             sendBack(msgCtx, outboundHttpCarbonMsg);
         }
         return InvocationResponse.CONTINUE;
-    }
-
-    private void serializeDataSource(OutputStream messageOutputStream) {
-        if (messageOutputStream != null) {
-
-        }
     }
 
     private HttpMessageDataStreamer getHttpMessageDataStreamer(HttpCarbonMessage outboundRequestMsg) {
