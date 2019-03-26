@@ -80,11 +80,16 @@ public class RequestUtils {
     }
 
     public static HttpCarbonMessage convertAxis2MsgCtxToCarbonMsg(MessageContext msgCtx, boolean isRequest) {
-        HttpMethod httpMethod = new HttpMethod((String) msgCtx.getProperty(BridgeConstants.HTTP_METHOD));
+        HttpMethod httpMethod = null;
+        if (msgCtx.getProperty(BridgeConstants.HTTP_METHOD) != null) {
+            httpMethod = new HttpMethod((String) msgCtx.getProperty(BridgeConstants.HTTP_METHOD));
+        } else {
+            LOG.error("HttpMethod not found in Axis2MessageContext");
+        }
         HttpCarbonMessage httpCarbonMessage;
         if (isRequest) {
             httpCarbonMessage = new HttpCarbonMessage(
-                    new DefaultHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.POST, ""));
+                    new DefaultHttpRequest(HttpVersion.HTTP_1_1, httpMethod, ""));
         } else {
             // Response
             httpCarbonMessage = new HttpCarbonMessage(
@@ -95,12 +100,7 @@ public class RequestUtils {
 
         headers.forEach(httpCarbonMessage::setHeader);
 
-//        httpCarbonMessage.completeMessage();
         return httpCarbonMessage;
-    }
-
-    private static void printHeaders(String key, Object value) {
-        LOG.info("{}: {}", key, value);
     }
 
     static String getRestUrlPostfix(String uri, String servicePath) {

@@ -140,37 +140,4 @@ public class HttpRequestWorker implements Runnable {
             LOG.error("Error occurred while setting the soap envelope", ex);
         }
     }
-
-
-
-    public void processNonEntityEnclosingRESTHandler(SOAPEnvelope soapEnvelope, MessageContext msgCtx,
-                                                     boolean injectToAxis2Engine) {
-        String soapAction = incomingCarbonMsg.getHeaders().get(SOAP_ACTION_HEADER);
-        if ((soapAction != null) && soapAction.startsWith("\"") && soapAction.endsWith("\"")) {
-            soapAction = soapAction.substring(1, soapAction.length() - 1);
-        }
-
-        msgCtx.setSoapAction(soapAction);
-//        msgContext.setTo(new EndpointReference(incomingCarbonMsg.getUri()));
-        msgCtx.setServerSide(true);
-        msgCtx.setDoingREST(true);
-//        if (!(incomingCarbonMsg.isEntityEnclosing())) {
-//            msgContext.setProperty(BridgeConstants.NO_ENTITY_BODY, Boolean.TRUE);
-//        }
-
-        try {
-            if (soapEnvelope == null) {
-                msgCtx.setEnvelope(new SOAP11Factory().getDefaultEnvelope());
-            } else {
-                msgCtx.setEnvelope(soapEnvelope);
-            }
-
-
-            if (injectToAxis2Engine) {
-                AxisEngine.receive(msgCtx);
-            }
-        } catch (Exception axisFault) {
-            axisFault.printStackTrace();
-        }
-    }
 }

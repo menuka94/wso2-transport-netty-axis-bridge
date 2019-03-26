@@ -83,14 +83,12 @@ public class AxisToClientConnectorBridge extends AbstractHandler implements Tran
 
     @Override
     public InvocationResponse invoke(MessageContext msgCtx) throws AxisFault {
-        LOG.info("invoke");
-
         HttpCarbonMessage originalCarbonMessage =
                 (HttpCarbonMessage) msgCtx.getProperty(BridgeConstants.HTTP_CARBON_MESSAGE);
         HttpCarbonMessage outboundHttpCarbonMsg = RequestUtils.convertAxis2MsgCtxToCarbonMsg(msgCtx, true);
 
 
-        if (outboundHttpCarbonMsg == null) {
+        if (originalCarbonMessage == null) {
             LOG.info("Carbon Message not found, " +
                     "sending " +
                     "requests originated from non HTTP transport is not supported yet");
@@ -150,8 +148,7 @@ public class AxisToClientConnectorBridge extends AbstractHandler implements Tran
             final HttpMessageDataStreamer outboundMsgDataStreamer = getHttpMessageDataStreamer(httpCarbonMessage);
             final OutputStream outputStream = outboundMsgDataStreamer.getOutputStream();
             SOAPEnvelope soapEnvelope = msgCtx.getEnvelope();
-            SOAPBody body = soapEnvelope.getBody();
-            String soapEnvelopeString = soapEnvelope.getBody().toString();
+            String soapEnvelopeString = soapEnvelope.toString();
             try {
                 outputStream.write(soapEnvelopeString.getBytes(Charset.defaultCharset()));
             } catch (IOException e) {

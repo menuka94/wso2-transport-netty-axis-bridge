@@ -22,6 +22,7 @@ import org.wso2.transports.http.bridge.BridgeConstants;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
+import javax.xml.stream.XMLStreamException;
 
 
 /**
@@ -52,7 +53,7 @@ public class MessageUtils {
             contentLength = lengthStr != null ? Long.parseLong(lengthStr) : contentLength;
             if (contentLength == BridgeConstants.NO_CONTENT_LENGTH_FOUND) {
                 // read one byte to make sure the incoming stream has data
-                contentLength = httpCarbonMessage.countMessageLengthTill(BridgeConstants.ONE_BYTE);
+                httpCarbonMessage.countMessageLengthTill(BridgeConstants.ONE_BYTE);
             }
         } catch (NumberFormatException e) {
             LOGGER.error("NumberFormatException");
@@ -73,9 +74,9 @@ public class MessageUtils {
 
                 // TODO: implement XML/JSON force validation
             }
-        } catch (Exception e) {
+        } catch (IOException | XMLStreamException e) {
             msgCtx.setProperty(BridgeConstants.MESSAGE_BUILDER_INVOKED, Boolean.TRUE);
-//            handleException("Error while building Passthrough stream", e);
+            // handleException("Error while building Passthrough stream", e);
         }
     }
 
