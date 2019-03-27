@@ -27,6 +27,7 @@ import org.apache.axiom.soap.SOAP11Constants;
 import org.apache.axiom.soap.SOAP12Constants;
 import org.apache.axiom.util.UIDGenerator;
 import org.apache.axis2.Constants;
+import org.apache.axis2.addressing.EndpointReference;
 import org.apache.axis2.context.ConfigurationContext;
 import org.apache.axis2.context.MessageContext;
 import org.apache.axis2.description.Parameter;
@@ -79,12 +80,14 @@ public class RequestUtils {
         return msgCtx;
     }
 
-    public static HttpCarbonMessage convertAxis2MsgCtxToCarbonMsg(MessageContext msgCtx, boolean isRequest) {
+    public static HttpCarbonMessage convertAxis2MsgCtxToCarbonMsg(MessageContext msgCtx) {
+        boolean isRequest = isRequest(msgCtx);
         HttpMethod httpMethod = null;
         if (msgCtx.getProperty(BridgeConstants.HTTP_METHOD) != null) {
             httpMethod = new HttpMethod((String) msgCtx.getProperty(BridgeConstants.HTTP_METHOD));
         } else {
             LOG.error("HttpMethod not found in Axis2MessageContext");
+            isRequest = false;
         }
         HttpCarbonMessage httpCarbonMessage;
         if (isRequest) {
@@ -196,6 +199,32 @@ public class RequestUtils {
             }
         }
         return soapVersion;
+    }
+
+
+    private static boolean isRequest(MessageContext msgCtx) {
+        EndpointReference epr = getDestinationEPR(msgCtx);
+        return epr != null;
+    }
+
+    /**
+     * Get the EPR for the message passed in
+     * @param msgContext the message context
+     * @return the destination EPR
+     */
+    public static EndpointReference getDestinationEPR(MessageContext msgContext) {
+
+        // Trasnport URL can be different from the WSA-To
+        String transportURL = (String) msgContext.getProperty(
+                org.apache.axis2.Constants.Configuration.TRANSPORT_URL);
+
+        if (transportURL != null) {
+            return new EndpointReference(transportURL);
+        } else if (
+                (msgContext.getTo() != null) && !msgContext.getTo().hasAnonymousAddress()) {
+            return msgContext.getTo();
+        }
+        return null;
     }
 
 }

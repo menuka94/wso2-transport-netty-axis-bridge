@@ -85,7 +85,7 @@ public class AxisToClientConnectorBridge extends AbstractHandler implements Tran
     public InvocationResponse invoke(MessageContext msgCtx) throws AxisFault {
         HttpCarbonMessage originalCarbonMessage =
                 (HttpCarbonMessage) msgCtx.getProperty(BridgeConstants.HTTP_CARBON_MESSAGE);
-        HttpCarbonMessage outboundHttpCarbonMsg = RequestUtils.convertAxis2MsgCtxToCarbonMsg(msgCtx, true);
+        HttpCarbonMessage outboundHttpCarbonMsg = RequestUtils.convertAxis2MsgCtxToCarbonMsg(msgCtx);
 
 
         if (originalCarbonMessage == null) {
@@ -192,6 +192,8 @@ public class AxisToClientConnectorBridge extends AbstractHandler implements Tran
             throw new AxisFault("Malformed Endpoint url found", e);
         }
     }
+
+
 
     private void setOutboundReqHeaders(HttpCarbonMessage outboundRequest, int port, String host) {
         HttpHeaders headers = outboundRequest.getHeaders();
