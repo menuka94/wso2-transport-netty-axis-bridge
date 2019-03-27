@@ -20,7 +20,6 @@ package org.wso2.transports.http.bridge.sender;
 
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpHeaders;
-import org.apache.axiom.soap.SOAPBody;
 import org.apache.axiom.soap.SOAPEnvelope;
 import org.apache.axis2.AxisFault;
 import org.apache.axis2.addressing.EndpointReference;
@@ -85,8 +84,14 @@ public class AxisToClientConnectorBridge extends AbstractHandler implements Tran
     public InvocationResponse invoke(MessageContext msgCtx) throws AxisFault {
         HttpCarbonMessage originalCarbonMessage =
                 (HttpCarbonMessage) msgCtx.getProperty(BridgeConstants.HTTP_CARBON_MESSAGE);
-        HttpCarbonMessage outboundHttpCarbonMsg = RequestUtils.convertAxis2MsgCtxToCarbonMsg(msgCtx);
 
+        HttpCarbonMessage outboundHttpCarbonMsg;
+        if (Boolean.TRUE.equals(msgCtx.getProperty(BridgeConstants.MESSAGE_BUILDER_INVOKED))) {
+            outboundHttpCarbonMsg = RequestUtils.convertAxis2MsgCtxToCarbonMsg(msgCtx);
+            // TODO: rewrite RequestUtils.convertAxis2MsgCtxToCarbonMsg() to match both cases
+        } else {
+            outboundHttpCarbonMsg = originalCarbonMessage;
+        }
 
         if (originalCarbonMessage == null) {
             LOG.info("Carbon Message not found, " +
@@ -192,7 +197,6 @@ public class AxisToClientConnectorBridge extends AbstractHandler implements Tran
             throw new AxisFault("Malformed Endpoint url found", e);
         }
     }
-
 
 
     private void setOutboundReqHeaders(HttpCarbonMessage outboundRequest, int port, String host) {

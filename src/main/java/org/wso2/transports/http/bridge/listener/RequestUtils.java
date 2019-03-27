@@ -18,6 +18,7 @@
  */
 package org.wso2.transports.http.bridge.listener;
 
+import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.DefaultHttpRequest;
 import io.netty.handler.codec.http.DefaultHttpResponse;
 import io.netty.handler.codec.http.HttpMethod;
@@ -37,6 +38,7 @@ import org.slf4j.LoggerFactory;
 import org.wso2.transport.http.netty.message.HttpCarbonMessage;
 import org.wso2.transports.http.bridge.BridgeConstants;
 
+import java.util.Collections;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -83,27 +85,33 @@ public class RequestUtils {
     public static HttpCarbonMessage convertAxis2MsgCtxToCarbonMsg(MessageContext msgCtx) {
         boolean isRequest = isRequest(msgCtx);
         HttpMethod httpMethod = null;
+
+
         if (msgCtx.getProperty(BridgeConstants.HTTP_METHOD) != null) {
             httpMethod = new HttpMethod((String) msgCtx.getProperty(BridgeConstants.HTTP_METHOD));
         } else {
             LOG.error("HttpMethod not found in Axis2MessageContext");
             isRequest = false;
         }
-        HttpCarbonMessage httpCarbonMessage;
+
+        HttpCarbonMessage outboundHttpCarbonMessage;
         if (isRequest) {
-            httpCarbonMessage = new HttpCarbonMessage(
+            // Request
+            LOG.info("Request");
+            outboundHttpCarbonMessage = new HttpCarbonMessage(
                     new DefaultHttpRequest(HttpVersion.HTTP_1_1, httpMethod, ""));
         } else {
             // Response
-            httpCarbonMessage = new HttpCarbonMessage(
+            LOG.info("Response");
+            outboundHttpCarbonMessage = new HttpCarbonMessage(
                     new DefaultHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK));
         }
 
         Map<String, String> headers = (Map<String, String>) msgCtx.getProperty(MessageContext.TRANSPORT_HEADERS);
 
-        headers.forEach(httpCarbonMessage::setHeader);
+        headers.forEach(outboundHttpCarbonMessage::setHeader);
 
-        return httpCarbonMessage;
+        return outboundHttpCarbonMessage;
     }
 
     static String getRestUrlPostfix(String uri, String servicePath) {
