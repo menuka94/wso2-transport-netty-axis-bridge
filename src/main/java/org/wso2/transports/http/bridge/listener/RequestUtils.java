@@ -18,7 +18,6 @@
  */
 package org.wso2.transports.http.bridge.listener;
 
-import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.DefaultHttpRequest;
 import io.netty.handler.codec.http.DefaultHttpResponse;
 import io.netty.handler.codec.http.HttpMethod;
@@ -38,7 +37,6 @@ import org.slf4j.LoggerFactory;
 import org.wso2.transport.http.netty.message.HttpCarbonMessage;
 import org.wso2.transports.http.bridge.BridgeConstants;
 
-import java.util.Collections;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -216,7 +214,7 @@ public class RequestUtils {
     }
 
     /**
-     * Get the EPR for the message passed in
+     * Get the EPR for the message passed in.
      * @param msgContext the message context
      * @return the destination EPR
      */

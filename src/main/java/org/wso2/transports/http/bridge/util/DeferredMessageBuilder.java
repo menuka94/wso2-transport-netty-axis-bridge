@@ -29,20 +29,23 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.transports.http.bridge.BridgeConstants;
 
-import javax.xml.stream.XMLStreamException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import javax.xml.stream.XMLStreamException;
 
 
+/**
+ * Class DeferredMessageBuilder contains the tools required to build the payload.
+ */
 public class DeferredMessageBuilder {
 
     private static Log log = LogFactory.getLog(DeferredMessageBuilder.class);
 
-    public final static String RELAY_FORMATTERS_MAP = "__RELAY_FORMATTERS_MAP";
-    public final static String FORCED_RELAY_FORMATTER = "__FORCED_RELAY_FORMATTER";
+    public static final String RELAY_FORMATTERS_MAP = "__RELAY_FORMATTERS_MAP";
+    public static final String FORCED_RELAY_FORMATTER = "__FORCED_RELAY_FORMATTER";
 
     private Map<String, Builder> builders = new HashMap<String, Builder>();
     private Map<String, MessageFormatter> formatters = new HashMap<String, MessageFormatter>();
@@ -96,10 +99,10 @@ public class DeferredMessageBuilder {
         }
 
         String contentType = (String) msgCtx.getProperty(Constants.Configuration.CONTENT_TYPE);
-        String _contentType = getContentType(contentType, msgCtx);
+        String contentType1 = getContentType(contentType, msgCtx);
 
         // TODO: Find a suitable substitution from Netty Transport
-//        in = HTTPTransportUtils.handleGZip(msgCtx, in);
+        // in = HTTPTransportUtils.handleGZip(msgCtx, in);
 
         AxisConfiguration configuration = msgCtx.getConfigurationContext().getAxisConfiguration();
         Parameter useFallbackParameter =
@@ -108,9 +111,7 @@ public class DeferredMessageBuilder {
         boolean useFallbackBuilder = false;
 
         if (useFallbackParameter != null) {
-            useFallbackBuilder =
-                    JavaUtils.isTrueExplicitly(useFallbackParameter.getValue(),
-                            useFallbackBuilder);
+            JavaUtils.isTrueExplicitly(useFallbackParameter.getValue(), useFallbackBuilder);
         }
 
         Map transportHeaders = (Map) msgCtx.getProperty(MessageContext.TRANSPORT_HEADERS);
@@ -126,7 +127,7 @@ public class DeferredMessageBuilder {
                     && trasferEncoded == null) {
                 msgCtx.setProperty(BridgeConstants.NO_ENTITY_BODY, true);
                 msgCtx.setProperty(Constants.Configuration.CONTENT_TYPE, "");
-//                msgCtx.setProperty(BridgeConstants.RELAY_EARLY_BUILD, true);
+                // msgCtx.setProperty(BridgeConstants.RELAY_EARLY_BUILD, true);
                 return new SOAP11Factory().getDefaultEnvelope();
             }
         }
@@ -135,8 +136,8 @@ public class DeferredMessageBuilder {
         Builder builder;
         if (contentType != null) {
             // loading builder from externally..
-            //builder = configuration.getMessageBuilder(_contentType,useFallbackBuilder);
-            builder = MessageProcessorSelector.getMessageBuilder(_contentType, msgCtx);
+            // builder = configuration.getMessageBuilder(_contentType,useFallbackBuilder);
+            builder = MessageProcessorSelector.getMessageBuilder(contentType1, msgCtx);
             if (builder != null) {
                 try {
                     if (contentLength != null && "0".equals(contentLength)) {
@@ -236,10 +237,7 @@ public class DeferredMessageBuilder {
         } catch (ClassNotFoundException e) {
             handleException("Builder class not found :" +
                     className, e);
-        } catch (IllegalAccessException e) {
-            handleException("Cannot initiate Builder class :" +
-                    className, e);
-        } catch (InstantiationException e) {
+        } catch (IllegalAccessException | InstantiationException e) {
             handleException("Cannot initiate Builder class :" +
                     className, e);
         }
@@ -256,10 +254,7 @@ public class DeferredMessageBuilder {
         } catch (ClassNotFoundException e) {
             handleException("MessageFormatter class not found :" +
                     className, e);
-        } catch (IllegalAccessException e) {
-            handleException("Cannot initiate MessageFormatter class :" +
-                    className, e);
-        } catch (InstantiationException e) {
+        } catch (IllegalAccessException | InstantiationException e) {
             handleException("Cannot initiate MessageFormatter class :" +
                     className, e);
         }
@@ -272,7 +267,7 @@ public class DeferredMessageBuilder {
     }
 
     /**
-     * This method is from org.apache.axis2.transport.TransportUtils - it was hack placed in Axis2 Transport to enable
+     * This method is from org.apache.axis2.transport.TransportUtils - it was a hack placed in Axis2 Transport to enable
      * responses with text/xml to be processed using the ApplicationXMLBuilder (which is technically wrong, it should be
      * the duty of the backend service to send the correct content type, which makes the most sense (refer RFC 1049),
      * alas, tis not the way of the World).

@@ -149,7 +149,7 @@ public class AxisToClientConnectorBridge extends AbstractHandler implements Tran
         future.setHttpConnectorListener(new ResponseListener(workerPool, msgCtx));
 
         // serialize
-        if(Boolean.TRUE.equals(msgCtx.getProperty(BridgeConstants.MESSAGE_BUILDER_INVOKED))) {
+        if (Boolean.TRUE.equals(msgCtx.getProperty(BridgeConstants.MESSAGE_BUILDER_INVOKED))) {
             final HttpMessageDataStreamer outboundMsgDataStreamer = getHttpMessageDataStreamer(httpCarbonMessage);
             final OutputStream outputStream = outboundMsgDataStreamer.getOutputStream();
             SOAPEnvelope soapEnvelope = msgCtx.getEnvelope();
