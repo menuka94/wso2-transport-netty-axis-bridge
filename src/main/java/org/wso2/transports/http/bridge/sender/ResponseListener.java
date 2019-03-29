@@ -24,6 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wso2.transport.http.netty.contract.HttpConnectorListener;
 import org.wso2.transport.http.netty.message.HttpCarbonMessage;
+import org.wso2.transports.http.bridge.BridgeConstants;
 
 /**
  * {@code ResponseListener} listens for the response expected for the sent request.
@@ -42,13 +43,13 @@ public class ResponseListener implements HttpConnectorListener {
 
     @Override
     public void onMessage(HttpCarbonMessage httpResponse) {
-        LOG.debug("Response received");
+        LOG.debug(BridgeConstants.BRIDGE_LOG_PREFIX + "Response received");
         workerPool.execute(new HttpResponseWorker(requestMsgCtx, httpResponse));
     }
 
     @Override
     public void onError(Throwable throwable) {
-        LOG.error("Error while processing the response", throwable);
+        LOG.error(BridgeConstants.BRIDGE_LOG_PREFIX + "Error while processing the response", throwable);
     }
 
 }

@@ -61,7 +61,7 @@ public class HttpRequestWorker implements Runnable {
         try {
             AxisEngine.receive(msgCtx);
         } catch (AxisFault ex) {
-            LOG.error("Error occurred while processing the request", ex);
+            LOG.error(BridgeConstants.BRIDGE_LOG_PREFIX + "Error occurred while processing the request", ex);
         }
     }
 
@@ -136,7 +136,7 @@ public class HttpRequestWorker implements Runnable {
         try {
             msgCtx.setEnvelope(envelope);
         } catch (AxisFault ex) {
-            LOG.error("Error occurred while setting the soap envelope", ex);
+            LOG.error(BridgeConstants.BRIDGE_LOG_PREFIX + "Error occurred while setting the soap envelope", ex);
         }
     }
 }

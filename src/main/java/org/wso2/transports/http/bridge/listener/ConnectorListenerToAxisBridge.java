@@ -24,6 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wso2.transport.http.netty.contract.HttpConnectorListener;
 import org.wso2.transport.http.netty.message.HttpCarbonMessage;
+import org.wso2.transports.http.bridge.BridgeConstants;
 
 /**
  * {@code ConnectorListenerToAxisBridge} receives the {@code HttpCarbonMessage} coming from the Netty HTTP transport,
@@ -43,7 +44,7 @@ public class ConnectorListenerToAxisBridge implements HttpConnectorListener {
     }
 
     public void onMessage(HttpCarbonMessage httpCarbonMessage) {
-        LOG.debug("Message received to HTTP transport, submitting a worker to the pool to process");
+        LOG.debug(BridgeConstants.BRIDGE_LOG_PREFIX + "Message received to HTTP transport, submitting a worker to the pool to process");
         workerPool.execute(new HttpRequestWorker(httpCarbonMessage, configurationContext));
     }
 

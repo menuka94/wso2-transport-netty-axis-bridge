@@ -70,9 +70,8 @@ public class Axis2HttpTransportListener implements TransportListener {
         try {
             serverConnectorFuture.sync();
         } catch (InterruptedException e) {
-            LOG.warn("Interrupted while waiting for server connector to start", e);
+            LOG.warn(BridgeConstants.BRIDGE_LOG_PREFIX + "Interrupted while waiting for server connector to start", e);
         }
-
     }
 
     @Override

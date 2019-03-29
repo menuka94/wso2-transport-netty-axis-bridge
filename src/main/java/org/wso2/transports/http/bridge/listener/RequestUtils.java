@@ -41,7 +41,7 @@ import java.util.Map;
 import java.util.TreeMap;
 
 /**
- * {@code RequestUtils} contains utilities which is used in request message flow.
+ * {@code RequestUtils} contains utilities used in request message flow.
  */
 public class RequestUtils {
     private static final Logger LOG = LoggerFactory.getLogger(RequestUtils.class);
@@ -84,23 +84,22 @@ public class RequestUtils {
         boolean isRequest = isRequest(msgCtx);
         HttpMethod httpMethod = null;
 
-
         if (msgCtx.getProperty(BridgeConstants.HTTP_METHOD) != null) {
             httpMethod = new HttpMethod((String) msgCtx.getProperty(BridgeConstants.HTTP_METHOD));
         } else {
-            LOG.error("HttpMethod not found in Axis2MessageContext");
+            LOG.warn(BridgeConstants.BRIDGE_LOG_PREFIX + "HttpMethod not found in Axis2MessageContext");
             isRequest = false;
         }
 
         HttpCarbonMessage outboundHttpCarbonMessage;
         if (isRequest) {
             // Request
-            LOG.info("Request");
+            LOG.info(BridgeConstants.BRIDGE_LOG_PREFIX + "Request");
             outboundHttpCarbonMessage = new HttpCarbonMessage(
                     new DefaultHttpRequest(HttpVersion.HTTP_1_1, httpMethod, ""));
         } else {
             // Response
-            LOG.info("Response");
+            LOG.info(BridgeConstants.BRIDGE_LOG_PREFIX + "Response");
             outboundHttpCarbonMessage = new HttpCarbonMessage(
                     new DefaultHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK));
         }
@@ -108,6 +107,12 @@ public class RequestUtils {
         Map<String, String> headers = (Map<String, String>) msgCtx.getProperty(MessageContext.TRANSPORT_HEADERS);
 
         headers.forEach(outboundHttpCarbonMessage::setHeader);
+
+        HttpCarbonMessage originalHttpCarbonMessage =
+                (HttpCarbonMessage) msgCtx.getProperty(BridgeConstants.HTTP_CARBON_MESSAGE);
+
+        // Map<String, Object> originalProperties = originalHttpCarbonMessage.getProperties();
+        // originalProperties.forEach(outboundHttpCarbonMessage::setProperty);
 
         return outboundHttpCarbonMessage;
     }

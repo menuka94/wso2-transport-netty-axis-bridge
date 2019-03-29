@@ -22,6 +22,7 @@ package org.wso2.transports.http.bridge;
  * {@code BridgeConstants} contains the constants related to netty axis2 bridge.
  */
 public class BridgeConstants {
+    public static final String BRIDGE_LOG_PREFIX = "[Bridge] ";
 
     public static final String NO_ENTITY_BODY = "NO_ENTITY_BODY";
 

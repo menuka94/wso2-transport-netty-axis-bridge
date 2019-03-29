@@ -87,14 +87,16 @@ public class AxisToClientConnectorBridge extends AbstractHandler implements Tran
 
         HttpCarbonMessage outboundHttpCarbonMsg;
         if (Boolean.TRUE.equals(msgCtx.getProperty(BridgeConstants.MESSAGE_BUILDER_INVOKED))) {
+            // content-aware
             outboundHttpCarbonMsg = RequestUtils.convertAxis2MsgCtxToCarbonMsg(msgCtx);
-            // TODO: rewrite RequestUtils.convertAxis2MsgCtxToCarbonMsg() to match both cases
         } else {
+            // passthrough
             outboundHttpCarbonMsg = originalCarbonMessage;
         }
+        // TODO: rewrite RequestUtils.convertAxis2MsgCtxToCarbonMsg() to match both cases
 
         if (originalCarbonMessage == null) {
-            LOG.info("Carbon Message not found, " +
+            LOG.info(BridgeConstants.BRIDGE_LOG_PREFIX + "Carbon Message not found, " +
                     "sending " +
                     "requests originated from non HTTP transport is not supported yet");
             return InvocationResponse.ABORT;
@@ -134,7 +136,8 @@ public class AxisToClientConnectorBridge extends AbstractHandler implements Tran
         try {
             clientRequest.respond(httpCarbonMessage);
         } catch (ServerConnectorException e) {
-            LOG.error("Error occurred while submitting the response back to the client", e);
+            LOG.error(BridgeConstants.BRIDGE_LOG_PREFIX + "Error occurred while submitting the response " +
+                    "back to the client", e);
         }
     }
 
@@ -157,12 +160,12 @@ public class AxisToClientConnectorBridge extends AbstractHandler implements Tran
             try {
                 outputStream.write(soapEnvelopeString.getBytes(Charset.defaultCharset()));
             } catch (IOException e) {
-                LOG.error(e.getMessage());
+                LOG.error(BridgeConstants.BRIDGE_LOG_PREFIX + e.getMessage());
             } finally {
                 try {
                     outputStream.close();
                 } catch (IOException e) {
-                    LOG.error(e.getMessage());
+                    LOG.error(BridgeConstants.BRIDGE_LOG_PREFIX + e.getMessage());
                 }
             }
         }

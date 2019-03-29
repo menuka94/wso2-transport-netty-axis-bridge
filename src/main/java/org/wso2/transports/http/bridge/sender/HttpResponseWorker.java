@@ -59,7 +59,8 @@ public class HttpResponseWorker implements Runnable {
             responseMsgCtx = requestMsgCtx.getOperationContext().
                     getMessageContext(WSDL2Constants.MESSAGE_LABEL_IN);
         } catch (AxisFault ex) {
-            LOG.error("Error getting response message context from the operation context", ex);
+            LOG.error(BridgeConstants.BRIDGE_LOG_PREFIX + "Error getting response message context " +
+                    "from the operation context", ex);
             return;
         }
 
@@ -95,7 +96,7 @@ public class HttpResponseWorker implements Runnable {
         try {
             responseMsgCtx.setEnvelope(envelope);
         } catch (AxisFault axisFault) {
-            LOG.error("Error occurred while setting SOAP envelope", axisFault);
+            LOG.error(BridgeConstants.BRIDGE_LOG_PREFIX + "Error occurred while setting SOAP envelope", axisFault);
         }
 
         // Set status code
@@ -114,7 +115,8 @@ public class HttpResponseWorker implements Runnable {
         try {
             AxisEngine.receive(responseMsgCtx);
         } catch (AxisFault ex) {
-            LOG.error("Error occurred while processing response message through Axis2", ex);
+            LOG.error(BridgeConstants.BRIDGE_LOG_PREFIX + "Error occurred while processing " +
+                    "response message through Axis2", ex);
         }
     }
 }
