@@ -130,11 +130,31 @@ public class AxisToClientConnectorBridge extends AbstractHandler implements Tran
         HttpCarbonRequest clientRequest =
                 (HttpCarbonRequest) msgCtx.getProperty(BridgeConstants.HTTP_CLIENT_REQUEST_CARBON_MESSAGE);
 
+        HttpCarbonMessage incomingHttpCarbonMessage = RequestUtils.convertAxis2MsgCtxToCarbonMsg(msgCtx);
+
         if (clientRequest == null) {
             throw new AxisFault("Original client request not found");
         }
         try {
-            clientRequest.respond(httpCarbonMessage);
+            clientRequest.respond(incomingHttpCarbonMessage);
+
+            if (Boolean.TRUE.equals((msgCtx.getProperty(BridgeConstants.MESSAGE_BUILDER_INVOKED)))) {
+                final HttpMessageDataStreamer httpMessageDataStreamer =
+                        getHttpMessageDataStreamer(incomingHttpCarbonMessage);
+                OutputStream outputStream = httpMessageDataStreamer.getOutputStream();
+                SOAPEnvelope soapEnvelope = msgCtx.getEnvelope();
+                try {
+                    outputStream.write(soapEnvelope.toString().getBytes(Charset.defaultCharset()));
+                } catch (IOException e) {
+                    LOG.error(BridgeConstants.BRIDGE_LOG_PREFIX + e.getMessage());
+                } finally {
+                    try {
+                        outputStream.close();
+                    } catch (IOException e) {
+                        LOG.error(BridgeConstants.BRIDGE_LOG_PREFIX + e.getMessage());
+                    }
+                }
+            }
         } catch (ServerConnectorException e) {
             LOG.error(BridgeConstants.BRIDGE_LOG_PREFIX + "Error occurred while submitting the response " +
                     "back to the client", e);
