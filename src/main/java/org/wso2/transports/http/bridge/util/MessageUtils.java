@@ -15,6 +15,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import javax.xml.stream.XMLStreamException;
 
+import static org.wso2.transports.http.bridge.util.RelayUtils.earlyBuild;
+import static org.wso2.transports.http.bridge.util.RelayUtils.processAddressing;
+
 
 /**
  * Class MessageUtils contains helper methods that are used to build the payload.
@@ -63,6 +66,10 @@ public class MessageUtils {
                         messageBuilder.getFormatters());
                 msgCtx.setProperty(BridgeConstants.MESSAGE_BUILDER_INVOKED, Boolean.TRUE);
 
+                if (!earlyBuild) {
+                    processAddressing(msgCtx, messageBuilder);
+                }
+
                 // TODO: implement XML/JSON force validation
             }
         } catch (IOException | XMLStreamException e) {
@@ -70,6 +77,7 @@ public class MessageUtils {
             // handleException("Error while building Passthrough stream", e);
         }
     }
+
 
     /**
      * Function to check given inputstream is empty or not

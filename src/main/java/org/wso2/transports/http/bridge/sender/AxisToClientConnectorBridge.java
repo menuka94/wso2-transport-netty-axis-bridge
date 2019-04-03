@@ -18,8 +18,11 @@
  */
 package org.wso2.transports.http.bridge.sender;
 
+import javax.xml.stream.XMLStreamException;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpHeaders;
+import org.apache.axiom.om.OMElement;
+import org.apache.axiom.om.OMOutputFormat;
 import org.apache.axiom.soap.SOAPEnvelope;
 import org.apache.axis2.AxisFault;
 import org.apache.axis2.addressing.EndpointReference;
@@ -27,6 +30,7 @@ import org.apache.axis2.context.ConfigurationContext;
 import org.apache.axis2.context.MessageContext;
 import org.apache.axis2.description.TransportOutDescription;
 import org.apache.axis2.handlers.AbstractHandler;
+import org.apache.axis2.transport.MessageFormatter;
 import org.apache.axis2.transport.TransportSender;
 import org.apache.axis2.transport.base.threads.WorkerPool;
 import org.apache.axis2.transport.base.threads.WorkerPoolFactory;
@@ -46,6 +50,8 @@ import org.wso2.transport.http.netty.message.HttpMessageDataStreamer;
 import org.wso2.transport.http.netty.message.PooledDataStreamerFactory;
 import org.wso2.transports.http.bridge.BridgeConstants;
 import org.wso2.transports.http.bridge.listener.RequestUtils;
+import org.wso2.transports.http.bridge.util.MessageFormatterDecoratorFactory;
+import org.wso2.transports.http.bridge.util.TransportUtils;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -143,21 +149,36 @@ public class AxisToClientConnectorBridge extends AbstractHandler implements Tran
                         getHttpMessageDataStreamer(incomingHttpCarbonMessage);
                 OutputStream outputStream = httpMessageDataStreamer.getOutputStream();
                 SOAPEnvelope soapEnvelope = msgCtx.getEnvelope();
-                try {
-                    outputStream.write(soapEnvelope.toString().getBytes(Charset.defaultCharset()));
-                } catch (IOException e) {
-                    LOG.error(BridgeConstants.BRIDGE_LOG_PREFIX + e.getMessage());
-                } finally {
-                    try {
-                        outputStream.close();
-                    } catch (IOException e) {
-                        LOG.error(BridgeConstants.BRIDGE_LOG_PREFIX + e.getMessage());
-                    }
-                }
+                writeDataToStream(soapEnvelope, msgCtx, httpCarbonMessage, outputStream);
+                // try {
+                //     outputStream.write(bytes);
+                // } catch (IOException e) {
+                //     LOG.error(BridgeConstants.BRIDGE_LOG_PREFIX + e.getMessage());
+                // } finally {
+                //     try {
+                //         outputStream.close();
+                //     } catch (IOException e) {
+                //         LOG.error(BridgeConstants.BRIDGE_LOG_PREFIX + e.getMessage());
+                //     }
+                // }
             }
         } catch (ServerConnectorException e) {
             LOG.error(BridgeConstants.BRIDGE_LOG_PREFIX + "Error occurred while submitting the response " +
                     "back to the client", e);
+        }
+    }
+
+    private static void writeDataToStream(SOAPEnvelope soapEnvelope, MessageContext msgCtx,
+                                          HttpCarbonMessage httpCarbonMessage, OutputStream out) throws AxisFault {
+        String contentType = httpCarbonMessage.getHeader(BridgeConstants.CONTENT_TYPE_HEADER);
+        MessageFormatter messageFormatter = MessageFormatterDecoratorFactory.createMessageFormatterDecorator(msgCtx);
+        OMOutputFormat format = TransportUtils.getOMOutputFormat(msgCtx);
+        OMElement element = soapEnvelope;
+        try {
+            element.serialize(out, format);
+        } catch (XMLStreamException e) {
+            LOG.error(BridgeConstants.BRIDGE_LOG_PREFIX + e.getMessage());
+            throw AxisFault.makeFault(e);
         }
     }
 
@@ -175,10 +196,14 @@ public class AxisToClientConnectorBridge extends AbstractHandler implements Tran
         if (Boolean.TRUE.equals(msgCtx.getProperty(BridgeConstants.MESSAGE_BUILDER_INVOKED))) {
             final HttpMessageDataStreamer outboundMsgDataStreamer = getHttpMessageDataStreamer(httpCarbonMessage);
             final OutputStream outputStream = outboundMsgDataStreamer.getOutputStream();
+
+            String messageType = (String) msgCtx.getProperty("messageType");
+
             SOAPEnvelope soapEnvelope = msgCtx.getEnvelope();
             String soapEnvelopeString = soapEnvelope.toString();
             try {
-                outputStream.write(soapEnvelopeString.getBytes(Charset.defaultCharset()));
+                // outputStream.write(soapEnvelopeString.getBytes(Charset.defaultCharset()));
+                writeDataToStream(soapEnvelope, msgCtx, httpCarbonMessage, outputStream);
             } catch (IOException e) {
                 LOG.error(BridgeConstants.BRIDGE_LOG_PREFIX + e.getMessage());
             } finally {

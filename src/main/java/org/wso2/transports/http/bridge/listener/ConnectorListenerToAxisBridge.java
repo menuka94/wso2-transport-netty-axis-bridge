@@ -44,7 +44,8 @@ public class ConnectorListenerToAxisBridge implements HttpConnectorListener {
     }
 
     public void onMessage(HttpCarbonMessage httpCarbonMessage) {
-        LOG.debug(BridgeConstants.BRIDGE_LOG_PREFIX + "Message received to HTTP transport, submitting a worker to the pool to process");
+        LOG.debug(BridgeConstants.BRIDGE_LOG_PREFIX + "Message received to HTTP transport, " +
+                "submitting a worker to the pool to process");
         workerPool.execute(new HttpRequestWorker(httpCarbonMessage, configurationContext));
     }
 

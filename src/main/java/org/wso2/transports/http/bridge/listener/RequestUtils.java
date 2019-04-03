@@ -108,12 +108,6 @@ public class RequestUtils {
 
         headers.forEach(outboundHttpCarbonMessage::setHeader);
 
-        HttpCarbonMessage originalHttpCarbonMessage =
-                (HttpCarbonMessage) msgCtx.getProperty(BridgeConstants.HTTP_CARBON_MESSAGE);
-
-        // Map<String, Object> originalProperties = originalHttpCarbonMessage.getProperties();
-        // originalProperties.forEach(outboundHttpCarbonMessage::setProperty);
-
         return outboundHttpCarbonMessage;
     }
 
