@@ -20,6 +20,7 @@ package org.wso2.transports.http.bridge.sender;
 
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpHeaders;
+import org.apache.axiom.om.OMElement;
 import org.apache.axiom.soap.SOAPEnvelope;
 import org.apache.axis2.AxisFault;
 import org.apache.axis2.addressing.EndpointReference;
@@ -130,17 +131,15 @@ public class AxisToClientConnectorBridge extends AbstractHandler implements Tran
         HttpCarbonRequest clientRequest =
                 (HttpCarbonRequest) msgCtx.getProperty(BridgeConstants.HTTP_CLIENT_REQUEST_CARBON_MESSAGE);
 
-        HttpCarbonMessage incomingHttpCarbonMessage = RequestUtils.convertAxis2MsgCtxToCarbonMsg(msgCtx);
-
         if (clientRequest == null) {
             throw new AxisFault("Original client request not found");
         }
         try {
-            clientRequest.respond(incomingHttpCarbonMessage);
+            clientRequest.respond(httpCarbonMessage);
 
             if (Boolean.TRUE.equals((msgCtx.getProperty(BridgeConstants.MESSAGE_BUILDER_INVOKED)))) {
                 final HttpMessageDataStreamer httpMessageDataStreamer =
-                        getHttpMessageDataStreamer(incomingHttpCarbonMessage);
+                        getHttpMessageDataStreamer(httpCarbonMessage);
                 OutputStream outputStream = httpMessageDataStreamer.getOutputStream();
                 SOAPEnvelope soapEnvelope = msgCtx.getEnvelope();
                 try {
@@ -175,10 +174,10 @@ public class AxisToClientConnectorBridge extends AbstractHandler implements Tran
         if (Boolean.TRUE.equals(msgCtx.getProperty(BridgeConstants.MESSAGE_BUILDER_INVOKED))) {
             final HttpMessageDataStreamer outboundMsgDataStreamer = getHttpMessageDataStreamer(httpCarbonMessage);
             final OutputStream outputStream = outboundMsgDataStreamer.getOutputStream();
-            SOAPEnvelope soapEnvelope = msgCtx.getEnvelope();
-            String soapEnvelopeString = soapEnvelope.toString();
+            OMElement omElement = msgCtx.getEnvelope().getBody().getFirstElement();
+            String omElementString = omElement.toString();
             try {
-                outputStream.write(soapEnvelopeString.getBytes(Charset.defaultCharset()));
+                outputStream.write(omElementString.getBytes(Charset.defaultCharset()));
             } catch (IOException e) {
                 LOG.error(BridgeConstants.BRIDGE_LOG_PREFIX + e.getMessage());
             } finally {
