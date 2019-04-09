@@ -141,18 +141,8 @@ public class AxisToClientConnectorBridge extends AbstractHandler implements Tran
                 final HttpMessageDataStreamer httpMessageDataStreamer =
                         getHttpMessageDataStreamer(httpCarbonMessage);
                 OutputStream outputStream = httpMessageDataStreamer.getOutputStream();
-                SOAPEnvelope soapEnvelope = msgCtx.getEnvelope();
-                try {
-                    outputStream.write(soapEnvelope.toString().getBytes(Charset.defaultCharset()));
-                } catch (IOException e) {
-                    LOG.error(BridgeConstants.BRIDGE_LOG_PREFIX + e.getMessage());
-                } finally {
-                    try {
-                        outputStream.close();
-                    } catch (IOException e) {
-                        LOG.error(BridgeConstants.BRIDGE_LOG_PREFIX + e.getMessage());
-                    }
-                }
+                OMElement omElement = msgCtx.getEnvelope().getBody().getFirstElement();
+                writeToStream(outputStream, omElement.toString());
             }
         } catch (ServerConnectorException e) {
             LOG.error(BridgeConstants.BRIDGE_LOG_PREFIX + "Error occurred while submitting the response " +
@@ -175,20 +165,23 @@ public class AxisToClientConnectorBridge extends AbstractHandler implements Tran
             final HttpMessageDataStreamer outboundMsgDataStreamer = getHttpMessageDataStreamer(httpCarbonMessage);
             final OutputStream outputStream = outboundMsgDataStreamer.getOutputStream();
             OMElement omElement = msgCtx.getEnvelope().getBody().getFirstElement();
-            String omElementString = omElement.toString();
-            try {
-                outputStream.write(omElementString.getBytes(Charset.defaultCharset()));
-            } catch (IOException e) {
-                LOG.error(BridgeConstants.BRIDGE_LOG_PREFIX + e.getMessage());
-            } finally {
-                try {
-                    outputStream.close();
-                } catch (IOException e) {
-                    LOG.error(BridgeConstants.BRIDGE_LOG_PREFIX + e.getMessage());
-                }
-            }
+            writeToStream(outputStream, omElement.toString());
         }
 
+    }
+
+    private void writeToStream(OutputStream outputStream, String omElementString) {
+        try {
+            outputStream.write(omElementString.getBytes(Charset.defaultCharset()));
+        } catch (IOException e) {
+            LOG.error(BridgeConstants.BRIDGE_LOG_PREFIX + e.getMessage());
+        } finally {
+            try {
+                outputStream.close();
+            } catch (IOException e) {
+                LOG.error(BridgeConstants.BRIDGE_LOG_PREFIX + e.getMessage());
+            }
+        }
     }
 
     @Override
